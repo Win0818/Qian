@@ -30,6 +30,11 @@ public class Constant {
 	 * 版本更新
 	 */
 	public static final int UPDATE_DIALOG_HANDLER = 0x00001005;
+	
+	/**
+	 * 
+	 */
+	public static final int NO_NETWORK_HANDLER = 0x00001006;
 	/**
 	 * 微信分享和登录
 	 */

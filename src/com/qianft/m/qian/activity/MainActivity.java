@@ -122,7 +122,7 @@ public class MainActivity extends Activity implements OnClickListener,
 			case Constant.HTML_LOADED:
 				stopProgressDialog();
 				break;
-			case 201:
+			case Constant.NO_NETWORK_HANDLER:
 				LogUtil.d("Wing", "mNoNetworkLinearLayout mHandler errorCode");
 				mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
 				break;
@@ -324,7 +324,7 @@ public class MainActivity extends Activity implements OnClickListener,
 					view.clearView();
 					LogUtil.d("Wing", "onReceivedError---errorCode---->>>>>>>"
 							+ errorCode);
-					mHandler.sendEmptyMessage(201);
+					mHandler.sendEmptyMessage(Constant.NO_NETWORK_HANDLER);
 					mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
 					super.onReceivedError(view, errorCode, description,
 							failingUrl);
@@ -801,7 +801,6 @@ public class MainActivity extends Activity implements OnClickListener,
 					});
 			requestQueue.add(jsonObjectRequest);
 		}
-
 	}
 
 	private void upgradeVersion() {
