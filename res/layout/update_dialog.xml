@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp" >
+
+    <RelativeLayout
+        android:id="@+id/rl_version_update_dialog_bg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@drawable/dialog_check_new_version">
+
+        <TextView
+            android:id="@+id/version_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="59dp"
+            android:layout_marginLeft="38dp" />
+        <TextView
+            android:id="@+id/package_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/version_name"
+            android:padding="4dp"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_marginLeft="38dp" />
+        <TextView
+            android:id="@+id/update_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="3dp"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_below="@+id/package_size"
+            android:layout_alignLeft="@+id/version_name"
+            android:layout_alignStart="@+id/version_name" />
+
+         <CheckBox
+            android:id="@+id/update_checkbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/update_checkbox_name"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:layout_below="@+id/update_message"
+            android:layout_alignLeft="@+id/update_message"
+            android:layout_alignStart="@+id/update_message"  />
+     
+         <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_below="@id/version_name"
+            android:layout_marginTop="200dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:id="@+id/linearLayout">
+
+            <Button
+                android:id="@+id/update_now"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/selector_update_dialog"
+                android:padding="5dp"
+                android:layout_marginLeft="30dp"
+                android:text="@string/update_btn_now" />
+
+            <Button
+                android:id="@+id/update_after"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/selector_update_dialog"
+                android:padding="5dp"
+                android:text="@string/update_btn_after"
+                android:layout_marginLeft="75dp"
+                 />
+        </LinearLayout>
+
+    </RelativeLayout>
+</RelativeLayout>

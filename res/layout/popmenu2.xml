@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/pure_white">
+
+     <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="2dp" 
+        android:background="@color/indianred"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:text="分享到"
+        android:textSize="18sp"
+        android:id="@+id/textView"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+    <LinearLayout
+        android:id="@+id/circle_ll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/textView"
+        android:layout_toLeftOf="@+id/textView"
+        android:layout_toStartOf="@+id/textView"
+        android:background="@drawable/selector_share_popmenu">
+
+        <ImageView
+            android:id="@+id/share_circle_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/share_to_circle"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal"
+            android:text="微信朋友圈"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/freind_ll"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_alignTop="@+id/circle_ll"
+        android:layout_alignLeft="@+id/textView"
+        android:layout_alignStart="@+id/textView"
+        android:layout_marginLeft="55dp"
+        android:layout_marginStart="38dp"
+        android:background="@drawable/selector_share_popmenu">
+
+        <ImageView
+            android:id="@+id/share_freind__icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:src="@drawable/share_to_freind"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal"
+            android:text="微信好友"/>
+
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/list_line"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/lightgray"
+        android:layout_below="@+id/circle_ll"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="20dp" />
+    <Button
+        android:id="@+id/dismiss_click"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:text="取消"
+        android:layout_below="@+id/list_line"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15dp"
+        android:paddingBottom="10dp"
+        android:textSize="18sp"/>
+
+</RelativeLayout>
