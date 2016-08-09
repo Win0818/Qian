@@ -815,14 +815,16 @@ public class MainActivity extends Activity implements OnClickListener,
 			alertDialog.show();
 			Window window = alertDialog.getWindow();
 			window.setContentView(R.layout.update_dialog);
-			TextView tv_title = (TextView) window.findViewById(R.id.version_name);
-			tv_title.setText("版本号： " + newVersionName);
-			TextView tv_message = (TextView) window.findViewById(R.id.package_size);
-			tv_message.setText("安装包大小： " + packageSize);
-			TextView tv_UpdateContent = (TextView) window.findViewById(R.id.update_message);
-			tv_UpdateContent.setText("更新内容： " + updateContent);
-			Button updateNow = (Button) window.findViewById(R.id.update_now);
-			Button updateAfter = (Button) window.findViewById(R.id.update_after);
+			TextView tv_title = (TextView) window.findViewById(R.id.version_title);
+			tv_title.setText("钱富通" + newVersionName + "震撼发布");
+			TextView tv_UpdateContent_1 = (TextView) window.findViewById(R.id.update_content_1);
+			tv_UpdateContent_1.setText("1: 更新内容： " + packageSize);
+			TextView tv_UpdateContent_2 = (TextView) window.findViewById(R.id.update_content_2);
+			tv_UpdateContent_2.setText("2:更新内容： " + updateContent);
+			TextView tv_UpdateContent_3 = (TextView) window.findViewById(R.id.update_content_3);
+			tv_UpdateContent_3.setText("3:更新内容： " + updateContent);
+			ImageButton updateNow = (ImageButton) window.findViewById(R.id.update_now);
+			ImageButton updateAfter = (ImageButton) window.findViewById(R.id.update_after);
 
 			updateNow.setOnClickListener(new OnClickListener() {
 				@Override
