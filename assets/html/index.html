@@ -76,6 +76,22 @@
 		var userid = "111222";
 		window.jsObj.wechat_Auth_Login_android(userid);
 	}
+
+	var text = "{'java':'hello java','C++':'hello C++','PHP':'hello PHP'}";
+	
+	function callAndroid_js() {
+		var obj =  window.jsObj.HtmlcallJava2(text, "failure")
+		//eval("var obj = " + window.jsObj.HtmlcallJava2(text, "failure"));
+		//alert('typeof:'+typeof(obj)); 
+		alert('success:'+obj); 
+		//alert('obj:'+obj);
+		//window.jsObj.HtmlcallJava2(text, "failure");
+	}
+
+	function failure() {
+		//alert("fffffff");
+		//eval("alert('fffffffeeeee')");
+	}
 	
 	
 </script>  
@@ -89,39 +105,29 @@ hello
 <input type="button" value="·ÖÏí" onclick="showHtmlcallJava()" />  
 <br>  
 <br>  
-<input type="button" value="ÊÚÈ¨µÇÂ¼" onclick="wechat_Auth_Login_js()" />  
-<br>
+<input type="button" value="ÊÚÈ¨µÇÂ¼" onclick="wechat_Auth_Login_js()" />   
 <br> 
-<br> 
-<input type="button" value="Î¢ÐÅµÇÂ¼" onclick="showHtmlcallJava2()" />  
-  
-<br>  
-<br>  
-<br>  
-
+<input type="button" value="Î¢ÐÅµÇÂ¼" onclick="showHtmlcallJava2()" />    
+<br>   
 <input id="id_input" style="width: 90%" type="text" value="null" />  
 <br>  
-<input type="button" value="AndroidcallHtml" onclick="window.jsObj.JavacallHtml()" />  
-  
-<br>  
-<br>  
-<br>  
-  
+<input type="button" value="AndroidcallHtml" onclick="window.jsObj.JavacallHtml()" />    
+<br>     
 <input id="id_input2" style="width: 90%" type="text" value="null" />  
 <br>  
 <input type="button" value="AndroidcallHtml2" onclick="window.jsObj.JavacallHtml2()" />  
-<br>  
-<br> 
+
 <br>
 <div id="output" >userinfo: </div><br/><br/> 
  <input type="submit" value="request: " onclick="window.jsObj.clickOnAndroid()"/>
-<br>  
-<br> 
+ 
 <br>
 <input type="button" value="´ò¿ªÉãÏñÍ·" onclick="takePhoto()" />  
 <br>  
 <br> 
 <input type="button" value="ÏÂÔØÍ¼Æ¬" onclick="starVideoPlayActivity_js()" />  
+
+<input type="button" value="CallAndroid" onclick="callAndroid_js()" />
 </body>  
 </html>  
 

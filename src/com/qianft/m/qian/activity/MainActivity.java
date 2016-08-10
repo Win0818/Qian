@@ -65,6 +65,7 @@ import com.qianft.m.qian.utils.LogUtil;
 import com.qianft.m.qian.utils.MySharePreData;
 import com.qianft.m.qian.utils.SharePopMenu;
 import com.qianft.m.qian.utils.SharePopMenu.shareBottomClickListener;
+import com.qianft.m.qian.utils.StorageUtils;
 import com.qianft.m.qian.utils.Util;
 import com.qianft.m.qian.view.GlobalProgressDialog;
 import com.tencent.mm.sdk.modelmsg.SendAuth;
@@ -88,14 +89,14 @@ public class MainActivity extends Activity implements OnClickListener,
 	private ImageButton mRefreshBtn;
 	private LinearLayout mNoNetworkLinearLayout;
 	private boolean DEBUG = true;
-	private String mAddress = Constant.Address;
-	// private String mAddress = "file:///android_asset/html/index.html";
-	// private String mAddress = "http://192.168.0.70:8088/Home/Index";
+	//private String mAddress = Constant.Address;
+	private String mAddress = "file:///android_asset/html/index.html";
+	//private String mAddress = "http://192.168.0.70:8088/Home/Index";
 	private String mShareUrl;
 	private String mTitle;
 	private Bitmap mIcom;
 	private long exitTime = 0;
-	private String mNowUrl = "http://m.qianft.com/";
+	private String mNowUrl = "";//"http://m.qianft.com/";
 	private IWXAPI wxApi;
 	private GlobalProgressDialog mGlobalProgressDialog;
 	private SharePopMenu popMenu;
@@ -348,7 +349,6 @@ public class MainActivity extends Activity implements OnClickListener,
 				public void onProgressChanged(WebView view, int newProgress) {
 					if (newProgress == 100) {
 						mHandler.sendEmptyMessage(Constant.HTML_LOADED);
-						// mNoNetworkLinearLayout.setVisibility(View.INVISIBLE);
 					}
 					super.onProgressChanged(view, newProgress);
 				}
@@ -490,6 +490,28 @@ public class MainActivity extends Activity implements OnClickListener,
 				popMenu.showAsDropDown(MainActivity.this
 						.findViewById(R.id.main_root));
 			}
+			@JavascriptInterface
+			public String share_To_Wechat_android(String json) {
+				JSONObject returnJson = null;
+				try {
+					JSONObject jsonObject = new JSONObject(json);
+					mShareUrl = jsonObject.getString("link");
+					mTitle = jsonObject.getString("title");
+					mDescription = jsonObject.getString("desc");
+					mImageUrl = jsonObject.getString("imgUrl");
+					popMenu.showAsDropDown(MainActivity.this
+							.findViewById(R.id.main_root));
+					returnJson = new JSONObject();
+					returnJson.put("errCode", "0000");
+					returnJson.put("errMsg", "OK");
+					
+					
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+				
+				return returnJson.toString();
+			}
 
 			@JavascriptInterface
 			public String loginWechat_android() {
@@ -518,26 +540,74 @@ public class MainActivity extends Activity implements OnClickListener,
 			}
 
 			// 微信授权
-			@JavascriptInterface
+			/*@JavascriptInterface
 			public String wechat_Auth_Login_android(String userid) {
 				Log.d("Wing", "userid:   " + userid);
 				Util.USER_ID = userid;
 				loginWechat();
 				return "";
-			}
-
+			}*/
 			@JavascriptInterface
-			public String HtmlcallJava2(final String param) {
-				String uid = MySharePreData.GetData(mContext,
-						Constant.WECHAT_LOGIN_SP_NAME, "union_id");
-				if (uid.equals("")) {
-					uid = "请授权微信登录";
+			public String wechat_Auth_Login_android(String json) {
+				
+				JSONObject jsonObject = null;
+				JSONObject returnJson = null;
+				
+				try {
+					jsonObject = new JSONObject(json);
+					String userid = jsonObject.getString("userId");
+					String postServerUrl = jsonObject.getString("postServerUrl");
+					String auth_Success_Url = jsonObject.getString("auth_Success_Url");
+					String success = jsonObject.getString("success");
+					String cancel = jsonObject.getString("cancel");
+					
+					LogUtil.d("Wing", "userid:   " + userid);
+					Util.SERVER_URL = postServerUrl;
+					Util.Auth_Success_Url = auth_Success_Url;
+					Util.USER_ID = userid;
+					loginWechat();
+					
+					returnJson = new JSONObject();
+					returnJson.put("errCode", "0000");
+					returnJson.put("errMsg", "OK");
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				return "Union_Id:  " + uid;
+				return returnJson.toString();
 			}
 
 			@JavascriptInterface
-			public void JavacallHtml() {
+			public String HtmlcallJava2(final String json, final String success) {
+				
+						JSONObject jo = null;
+						Log.d("Wing", "success:  " + success  + "::::" + json);
+						try {
+							jo = new JSONObject();
+							
+							//Log.d("Wing", "HtmlcallJava2: " + java + "::::" + C + "::::" + PHP);
+							JSONObject jsonObject = new JSONObject(json);
+							Log.d("Wing", "jsonObject:  " + jsonObject);
+							String java = jsonObject.getString("java");
+							String C = jsonObject.getString("C++");
+							String PHP = jsonObject.getString("PHP");
+							
+							Log.d("Wing", "HtmlcallJava2:   " + java + "::::" + C + "::::" + PHP);
+							//mWebView.loadUrl("javascript: " + success +"()");
+							
+							jo.put("success", "0000");
+							jo.put("failure", "0001");
+							
+						} catch (JSONException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+				
+				return jo.toString();
+			}
+
+			@JavascriptInterface
+			public void JavacallHtml(JSONObject js) {
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -611,10 +681,47 @@ public class MainActivity extends Activity implements OnClickListener,
 			 * @param picFileName
 			 * @return
 			 */
-			@JavascriptInterface
+			/*@JavascriptInterface
 			public void downloadPicture(final String imageUrl,
 					final String savePath, final String picFileName) {
 				Util.downLoadPicture(imageUrl, savePath, picFileName);
+			}*/
+			
+			@JavascriptInterface
+			public String downloadPicture(String json) {
+				JSONObject returnJson = new JSONObject();
+				JSONObject jsonObject = null;
+				try {
+					jsonObject = new JSONObject(json);
+					String imageUrl = jsonObject.getString("imageUrl");
+					String savePath = jsonObject.getString("savePath");
+					String picFileName = jsonObject.getString("picFileName");
+					long totalSize = jsonObject.getInt("TotalSize");
+					String success = jsonObject.getString("success");
+					String cancel = jsonObject.getString("cancel");
+					
+					File mTempFile = new File(picFileName);
+					returnJson = new JSONObject();
+					
+					returnJson.put("errCode", "0000");
+					returnJson.put("errMsg", "OK");
+					
+					 long storage = StorageUtils.getAvailableStorage();
+				        if (DEBUG) {
+				            Log.i(TAG, "storage:" + storage + " totalSize:" + totalSize);
+				        }
+
+				        if (totalSize - mTempFile.length() > storage) {
+				        	returnJson.put("errMsg", "OK");
+				            //throw new NoMemoryException("SD card no memory.");
+				        }
+					
+					Util.downLoadPicture(imageUrl, savePath, picFileName);
+					
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+				return returnJson.toString();
 			}
 
 			@JavascriptInterface
@@ -689,13 +796,15 @@ public class MainActivity extends Activity implements OnClickListener,
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 		imageUri = Uri.fromFile(outputImage);
 		Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
 		intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
 		startActivityForResult(intent, TAKE_PHOTO);
+		
 	}
 
-	@Override
+	/*@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		switch (requestCode) {
 		case TAKE_PHOTO:
@@ -722,7 +831,7 @@ public class MainActivity extends Activity implements OnClickListener,
 		default:
 			break;
 		}
-	}
+	}*/
 
 	public void synCookies(String url, String cookies) {
 		Log.d("Wing", "synCookies:" + url);
@@ -765,7 +874,7 @@ public class MainActivity extends Activity implements OnClickListener,
 
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void helloEventBus(String message) {
-		Log.d("Wing", "message；  " + message);
+		Log.d("Wing", "message:  " + message);
 		if (message.equals("hello")) {
 			mWebView.loadUrl("http://m.qianft.com/WeiXin/Success");
 		} else if (message.equals("login_state")) {
@@ -775,7 +884,6 @@ public class MainActivity extends Activity implements OnClickListener,
 					.replace("UNIONID", uid));
 		}
 	}
-
 	/**
 	 * 检查更新版本
 	 */
@@ -845,7 +953,6 @@ public class MainActivity extends Activity implements OnClickListener,
 					.findViewById(R.id.update_checkbox);
 			mUpdate_CB
 					.setOnCheckedChangeListener(new OnCheckedChangeListener() {
-
 						@Override
 						public void onCheckedChanged(CompoundButton buttonView,
 								boolean isChecked) {

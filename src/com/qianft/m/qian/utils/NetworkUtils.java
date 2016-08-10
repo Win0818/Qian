@@ -1,5 +1,7 @@
 package com.qianft.m.qian.utils;
 
+import java.util.UUID;
+
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo.State;
@@ -26,4 +28,20 @@ public class NetworkUtils {
         }
         return NETWORN_NONE;
     }
+    
+    public static String getFileNameFromUrl(String url) {
+		// 通过 ‘？’ 和 ‘/’ 判断文件名
+		int index = url.lastIndexOf('?');
+		String filename;
+		if (index > 1) {
+			filename = url.substring(url.lastIndexOf('/') + 1, index);
+		} else {
+			filename = url.substring(url.lastIndexOf('/') + 1);
+		}
+
+		if (filename == null || "".equals(filename.trim())) {// 如果获取不到文件名称
+			filename = UUID.randomUUID() + "";// 默认取一个文件名
+		}
+		return filename;
+	}
 }
