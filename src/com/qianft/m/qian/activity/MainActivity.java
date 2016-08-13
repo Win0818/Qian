@@ -1,7 +1,7 @@
 package com.qianft.m.qian.activity;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 
@@ -74,6 +74,8 @@ import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
 import com.tencent.mm.sdk.modelmsg.WXWebpageObject;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.umeng.analytics.MobclickAgent;
+import com.umeng.message.PushAgent;
 
 /**
  * 
@@ -81,7 +83,7 @@ import com.tencent.mm.sdk.openapi.WXAPIFactory;
  *         哪些文件必须经过网络去加载，然后在 <html> 标签中加入 <html manifest="demo.appcache">
  *         即可完成缓存的实现。
  */
-public class MainActivity extends Activity implements OnClickListener,
+public class MainActivity extends BaseActivity implements OnClickListener,
 		shareBottomClickListener {
 
 	private String TAG = "Wing";
@@ -161,6 +163,8 @@ public class MainActivity extends Activity implements OnClickListener,
 		initData();
 
 	}
+	
+
 
 	private void initView() {
 		picture = (ImageView) findViewById(R.id.image_view);
@@ -191,6 +195,9 @@ public class MainActivity extends Activity implements OnClickListener,
 	private void initData() {
 		EventBus.getDefault().register(this);
 		requestQueue = Volley.newRequestQueue(mContext);
+		//友盟推送
+		PushAgent mPushAgent = PushAgent.getInstance(this);
+		mPushAgent.enable();
 		cheakVersion();
 	}
 
@@ -200,6 +207,8 @@ public class MainActivity extends Activity implements OnClickListener,
 	@Override
 	protected void onResume() {
 		super.onResume();
+		//友盟统计
+		MobclickAgent.onResume(this); 
 		LogUtil.d(TAG, "onResume:  " + Util.WECHAT_CODE);
 	}
 
@@ -455,6 +464,7 @@ public class MainActivity extends Activity implements OnClickListener,
 
 	/**
 	 * 
+	 * 
 	 */
 	private void loginWechat() {
 		// send oauth request
@@ -491,47 +501,81 @@ public class MainActivity extends Activity implements OnClickListener,
 						.findViewById(R.id.main_root));
 			}
 			@JavascriptInterface
-			public String share_To_Wechat_android(String json) {
-				JSONObject returnJson = null;
-				try {
-					JSONObject jsonObject = new JSONObject(json);
-					mShareUrl = jsonObject.getString("link");
-					mTitle = jsonObject.getString("title");
-					mDescription = jsonObject.getString("desc");
-					mImageUrl = jsonObject.getString("imgUrl");
-					popMenu.showAsDropDown(MainActivity.this
-							.findViewById(R.id.main_root));
-					returnJson = new JSONObject();
-					returnJson.put("errCode", "0000");
-					returnJson.put("errMsg", "OK");
-					
-					
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+			public void  share_To_Wechat_android(final String json) {
 				
-				return returnJson.toString();
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						JSONObject returnJson = null;
+						String mCallback = null;
+						String mCancel = null ;
+						String result = null;
+						try {
+							JSONObject jsonObject = new JSONObject(json);
+							mShareUrl = jsonObject.getString("link");
+							mTitle = jsonObject.getString("title");
+							mDescription = jsonObject.getString("desc");
+							mImageUrl = jsonObject.getString("imgUrl");
+							mCallback = jsonObject.getString("callback");
+							mCancel = jsonObject.getString("cancel");
+							popMenu.showAsDropDown(MainActivity.this
+									.findViewById(R.id.main_root));
+							
+							returnJson = new JSONObject();
+							returnJson.put("errCode", "0000");
+							returnJson.put("errMsg", "OK");
+							
+							
+							JSONObject jsonObject2 = new JSONObject();
+							jsonObject2.put("link", mShareUrl);
+							jsonObject2.put("title", mTitle);
+							jsonObject2.put("desc", mDescription);
+							
+							returnJson.put("res", jsonObject2);
+							
+						} catch (JSONException e) {
+							try {
+								returnJson.put("errCode", "0001");
+								returnJson.put("errMsg", "NO");
+							} catch (JSONException e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
+							e.printStackTrace();
+						}finally {
+							if (TextUtils.isEmpty(mCallback) && returnJson != null) {
+								result = returnJson.toString();
+								mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
+							}
+						}
+					}
+				});
 			}
 
 			@JavascriptInterface
-			public String loginWechat_android() {
+			public void loginWechat_android(final String json) {
 
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
-						String uid = MySharePreData.GetData(MainActivity.this,
-								Constant.WECHAT_LOGIN_SP_NAME, "union_id");
-						if (TextUtils.isEmpty(uid)) {
-							loginWechat_2();
-						} else {
-							Log.d(TAG, "union_id:   " + uid);
-							mWebView.loadUrl("http://m.qianft.com/UserLogin/WeChatLogin?unionId=UNIONID"
-									.replace("UNIONID", uid));
+						try {
+							JSONObject jsonObject = new JSONObject(json);
+							String url = jsonObject.getString("");
+							String uid = MySharePreData.GetData(MainActivity.this,
+									Constant.WECHAT_LOGIN_SP_NAME, "union_id");
+							if (TextUtils.isEmpty(uid)) {
+								loginWechat_2();
+							} else {
+								Log.d(TAG, "union_id:   " + uid);
+								mWebView.loadUrl("http://m.qianft.com/UserLogin/WeChatLogin?unionId=UNIONID"
+										.replace("UNIONID", uid));
+							}
+						} catch (JSONException e) {
+							e.printStackTrace();
 						}
+						
 					}
 				});
-				return "login succeed";
-				// }
 			}
 
 			@JavascriptInterface
@@ -548,40 +592,57 @@ public class MainActivity extends Activity implements OnClickListener,
 				return "";
 			}*/
 			@JavascriptInterface
-			public String wechat_Auth_Login_android(String json) {
-				
-				JSONObject jsonObject = null;
-				JSONObject returnJson = null;
-				
-				try {
-					jsonObject = new JSONObject(json);
-					String userid = jsonObject.getString("userId");
-					String postServerUrl = jsonObject.getString("postServerUrl");
-					String auth_Success_Url = jsonObject.getString("auth_Success_Url");
-					String success = jsonObject.getString("success");
-					String cancel = jsonObject.getString("cancel");
+			public void  wechat_Auth_Login_android(final String json) {
+				runOnUiThread(new Runnable() {
 					
-					LogUtil.d("Wing", "userid:   " + userid);
-					Util.SERVER_URL = postServerUrl;
-					Util.Auth_Success_Url = auth_Success_Url;
-					Util.USER_ID = userid;
-					loginWechat();
-					
-					returnJson = new JSONObject();
-					returnJson.put("errCode", "0000");
-					returnJson.put("errMsg", "OK");
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				return returnJson.toString();
+					@Override
+					public void run() {
+						JSONObject jsonObject = null;
+						JSONObject returnJson = null;
+						
+						try {
+							jsonObject = new JSONObject(json);
+							String userid = jsonObject.getString("userId");
+							String postServerUrl = jsonObject.getString("postServerUrl");
+							String auth_Success_Url = jsonObject.getString("auth_Success_Url");
+							String mCallback = jsonObject.getString("callback");
+							String cancel = jsonObject.getString("cancel");
+							
+							LogUtil.d("Wing", "userid:   " + userid);
+							Util.SERVER_URL = postServerUrl;
+							Util.Auth_Success_Url = auth_Success_Url;
+							Util.USER_ID = userid;
+							loginWechat();
+							
+							
+							returnJson = new JSONObject();
+							returnJson.put("errCode", "0000");
+							returnJson.put("errMsg", "OK");
+							
+							JSONObject jsonObject2 = new JSONObject();
+							jsonObject2.put("postServerUrl", postServerUrl);
+							
+							if (TextUtils.isEmpty(mCallback)) {
+								//mWebView.loadUrl("javascript:" + mSuccess + "(" + result +")" );
+							}
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+					}
+				});
+				
+				
 			}
 
 			@JavascriptInterface
-			public String HtmlcallJava2(final String json, final String success) {
+			public void  HtmlcallJava2(final String json) {
 				
+				runOnUiThread(new Runnable() {
+					
+					@Override
+					public void run() {
 						JSONObject jo = null;
-						Log.d("Wing", "success:  " + success  + "::::" + json);
+						Log.d("Wing", "success:  "  + "::::" + json);
 						try {
 							jo = new JSONObject();
 							
@@ -591,19 +652,32 @@ public class MainActivity extends Activity implements OnClickListener,
 							String java = jsonObject.getString("java");
 							String C = jsonObject.getString("C++");
 							String PHP = jsonObject.getString("PHP");
+							String mCallback = jsonObject.getString("callback");
 							
-							Log.d("Wing", "HtmlcallJava2:   " + java + "::::" + C + "::::" + PHP);
+							Log.d("Wing", "HtmlcallJava2:   " + java + ":::: " + C + "::::" + PHP);
 							//mWebView.loadUrl("javascript: " + success +"()");
 							
 							jo.put("success", "0000");
 							jo.put("failure", "0001");
 							
+							JSONObject jsonObject2 = new JSONObject();
+							jsonObject2.put("wwww", "wuyong");
+							jsonObject2.put("yyyy", "wuwuuuu");
+							
+							jo.put("res", jsonObject2);  
+							
+							String reslut = jo.toString();
+							Log.d("Wing", "reslut:  -----" + reslut);
+							mWebView.loadUrl("javascript: " + mCallback + "(" + reslut + ")");
+							
 						} catch (JSONException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						
+					}
+				});
+						
 				
-				return jo.toString();
 			}
 
 			@JavascriptInterface
@@ -688,40 +762,51 @@ public class MainActivity extends Activity implements OnClickListener,
 			}*/
 			
 			@JavascriptInterface
-			public String downloadPicture(String json) {
-				JSONObject returnJson = new JSONObject();
-				JSONObject jsonObject = null;
-				try {
-					jsonObject = new JSONObject(json);
-					String imageUrl = jsonObject.getString("imageUrl");
-					String savePath = jsonObject.getString("savePath");
-					String picFileName = jsonObject.getString("picFileName");
-					long totalSize = jsonObject.getInt("TotalSize");
-					String success = jsonObject.getString("success");
-					String cancel = jsonObject.getString("cancel");
+			public void downloadPicture(final String json) {
+				
+				runOnUiThread(new Runnable() {
 					
-					File mTempFile = new File(picFileName);
-					returnJson = new JSONObject();
-					
-					returnJson.put("errCode", "0000");
-					returnJson.put("errMsg", "OK");
-					
-					 long storage = StorageUtils.getAvailableStorage();
-				        if (DEBUG) {
-				            Log.i(TAG, "storage:" + storage + " totalSize:" + totalSize);
-				        }
+					@Override
+					public void run() {
+						JSONObject returnJson = new JSONObject();
+						JSONObject jsonObject = null;
+						try {
+							jsonObject = new JSONObject(json);
+							String imageUrl = jsonObject.getString("imageUrl");
+							String savePath = jsonObject.getString("savePath");
+							String picFileName = jsonObject.getString("picFileName");
+							long totalSize = jsonObject.getInt("TotalSize");
+							String success = jsonObject.getString("success");
+							String cancel = jsonObject.getString("cancel");
+							
+							File mTempFile = new File(picFileName);
+							returnJson = new JSONObject();
+							
+							returnJson.put("errCode", "0000");
+							returnJson.put("errMsg", "OK");
+							
+							 long storage = StorageUtils.getAvailableStorage();
+						        if (DEBUG) {
+						            Log.i(TAG, "storage:" + storage + " totalSize:" + totalSize);
+						        }
 
-				        if (totalSize - mTempFile.length() > storage) {
-				        	returnJson.put("errMsg", "OK");
-				            //throw new NoMemoryException("SD card no memory.");
-				        }
-					
-					Util.downLoadPicture(imageUrl, savePath, picFileName);
-					
-				} catch (Exception e) {
-					// TODO: handle exception
-				}
-				return returnJson.toString();
+						        if (totalSize - mTempFile.length() > storage) {
+						        	returnJson.put("errMsg", "NO, ROM no memory");
+						            //throw new NoMemoryException("SD card no memory.");
+						        }
+							
+							Util.downLoadPicture(imageUrl, savePath, picFileName);
+							
+						} catch (JSONException e) {
+							try {
+								returnJson.put("errMsg", "NO, Json analysis Error");
+							} catch (JSONException e1) {
+								e1.printStackTrace();
+							}
+						}
+					}
+				});
+				
 			}
 
 			@JavascriptInterface
@@ -796,11 +881,36 @@ public class MainActivity extends Activity implements OnClickListener,
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 		imageUri = Uri.fromFile(outputImage);
+		
 		Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
 		intent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
-		startActivityForResult(intent, TAKE_PHOTO);
+		//startActivityForResult(intent, TAKE_PHOTO);
+		startActivity(intent);
+		
+		//Bitmap saveBitmap =(Bitmap)params[0];
+		//String picOuputPath =(String)params[1];
+		FileOutputStream out = null;
+		try {
+			
+			Bitmap saveBitmap = BitmapFactory
+					.decodeStream(getContentResolver().openInputStream(
+							imageUri));
+			out = new FileOutputStream(saveTargetDir);
+			saveBitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+			// Release bitmap
+			if (saveBitmap != null && !saveBitmap.isRecycled()) {
+				saveBitmap.recycle();
+				saveBitmap = null;
+			}
+		} catch (Exception e) {
+			LogUtil.e(TAG, "Failed to write image --- ");
+		} finally {
+			try {
+				out.close();
+			} catch (Exception e) {
+			}
+		}
 		
 	}
 
@@ -859,6 +969,11 @@ public class MainActivity extends Activity implements OnClickListener,
 		cookieSyncManager.sync();
 
 		// String testcookie2 = cookieManager.getCookie(urlpath);
+	}
+	@Override
+	protected void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
 	}
 
 	@Override

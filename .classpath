@@ -5,5 +5,14 @@
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
+	<classpathentry kind="lib" path="D:/wing_code_android/umsdk_Android_v6.0.1/example/libs/umeng-analytics-v6.0.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/PushSDK"/>
+	<classpathentry kind="lib" path="D:/wing_workspace/Qian/libs/eventbus-3.0.0.jar"/>
+	<classpathentry kind="lib" path="D:/wing_workspace/Qian/libs/glide-3.7.0.jar"/>
+	<classpathentry kind="lib" path="D:/wing_workspace/Qian/libs/libammsdk_old.jar"/>
+	<classpathentry kind="lib" path="D:/wing_workspace/Qian/libs/org.apache.http.legacy.jar"/>
+	<classpathentry kind="lib" path="D:/wing_workspace/Qian/libs/umeng-analytics-v6.0.1.jar"/>
+	<classpathentry kind="lib" path="D:/wing_workspace/Qian/libs/volley.jar"/>
+	<classpathentry kind="lib" path="D:/wing_workspace/Qian/libs/android-support-v4.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

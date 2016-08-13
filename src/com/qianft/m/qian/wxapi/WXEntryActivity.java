@@ -116,6 +116,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 			} else if (resp.getType() == ConstantsAPI.COMMAND_SENDMESSAGE_TO_WX) {
 				// 分享取消
 				Toast.makeText(getApplicationContext(), "分享取消", 2000).show();
+				
 				System.out.println("ERR_USER_CANCEL");
 			}
 			this.finish();

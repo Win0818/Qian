@@ -5,15 +5,18 @@ import android.os.Bundle;
 
 import com.qianft.m.qian.utils.ActivityCollector;
 import com.qianft.m.qian.utils.LogUtil;
+import com.umeng.message.PushAgent;
 
 public class BaseActivity extends Activity{
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		LogUtil.d("BaseActivity", getClass().getSimpleName());
+		LogUtil.d("BaseActivity", "BaseActivity:  " + getClass().getSimpleName());
 		
 		ActivityCollector.addActivity(this);
+		//友盟推送
+		PushAgent.getInstance(this).onAppStart();
 		
 	}
 	

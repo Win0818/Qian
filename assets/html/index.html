@@ -77,20 +77,23 @@
 		window.jsObj.wechat_Auth_Login_android(userid);
 	}
 
-	var text = "{'java':'hello java','C++':'hello C++','PHP':'hello PHP'}";
+	var text = "{'java':'hello java','C++':'hello C++','PHP':'hello PHP','callback':'failure'}";
 	
 	function callAndroid_js() {
-		var obj =  window.jsObj.HtmlcallJava2(text, "failure")
+
+		 window.jsObj.HtmlcallJava2(text);
 		//eval("var obj = " + window.jsObj.HtmlcallJava2(text, "failure"));
 		//alert('typeof:'+typeof(obj)); 
-		alert('success:'+obj); 
+		//alert('success:'+obj); 
 		//alert('obj:'+obj);
 		//window.jsObj.HtmlcallJava2(text, "failure");
 	}
 
-	function failure() {
-		//alert("fffffff");
-		//eval("alert('fffffffeeeee')");
+	function failure(json) {
+		var obj = eval(json);
+		
+		alert("fffffff" + json.success  + "    failure: " + json.failure);
+		eval("alert('fffffffeeeee')");
 	}
 	
 	
