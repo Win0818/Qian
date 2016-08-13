@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import com.qianft.m.qian.utils.ActivityCollector;
 import com.qianft.m.qian.utils.LogUtil;
+import com.umeng.message.PushAgent;
 
 public class BaseActivity extends Activity{
 	
@@ -14,6 +15,7 @@ public class BaseActivity extends Activity{
 		LogUtil.d("BaseActivity", getClass().getSimpleName());
 		
 		ActivityCollector.addActivity(this);
+		PushAgent.getInstance(this).onAppStart();
 		
 	}
 	

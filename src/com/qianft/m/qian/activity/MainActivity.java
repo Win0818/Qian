@@ -73,6 +73,10 @@ import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
 import com.tencent.mm.sdk.modelmsg.WXWebpageObject;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.umeng.analytics.MobclickAgent;
+import com.umeng.message.IUmengRegisterCallback;
+import com.umeng.message.PushAgent;
+import com.umeng.message.UmengRegistrar;
 
 /**
  * 
@@ -80,7 +84,7 @@ import com.tencent.mm.sdk.openapi.WXAPIFactory;
  *         哪些文件必须经过网络去加载，然后在 <html> 标签中加入 <html manifest="demo.appcache">
  *         即可完成缓存的实现。
  */
-public class MainActivity extends Activity implements OnClickListener,
+public class MainActivity extends BaseActivity implements OnClickListener,
 		shareBottomClickListener {
 
 	private String TAG = "Wing";
@@ -113,6 +117,7 @@ public class MainActivity extends Activity implements OnClickListener,
 	private String packageSize = null;
 	private String updateContent = null;
 	private int newVersionCode = 1;
+	private PushAgent mPushAgent;
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -155,7 +160,13 @@ public class MainActivity extends Activity implements OnClickListener,
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		String action = getIntent().getAction();
+		if (action != null && action.equals("com.qianft.m.qian.push")) {
+			String Push_Url = getIntent().getStringExtra("Push_Url");
+			mAddress = Push_Url;
+		}
 		setContentView(R.layout.activity_main);
+		mPushAgent = PushAgent.getInstance(this);
 		initView();
 		initData();
 
@@ -190,6 +201,13 @@ public class MainActivity extends Activity implements OnClickListener,
 	private void initData() {
 		EventBus.getDefault().register(this);
 		requestQueue = Volley.newRequestQueue(mContext);
+		
+		mPushAgent.enable(mRegisterCallback);
+		//mPushAgent.enable();
+		
+		Log.i(TAG, "updateStatus:" + String.format("enabled:%s  isRegistered:%s  device_token:%s",
+				mPushAgent.isEnabled(), mPushAgent.isRegistered(), mPushAgent.getRegistrationId()));
+		
 		cheakVersion();
 	}
 
@@ -199,8 +217,24 @@ public class MainActivity extends Activity implements OnClickListener,
 	@Override
 	protected void onResume() {
 		super.onResume();
+		MobclickAgent.onResume(this);
 		LogUtil.d(TAG, "onResume:  " + Util.WECHAT_CODE);
 	}
+	
+	public IUmengRegisterCallback mRegisterCallback = new IUmengRegisterCallback() {
+			
+			@Override
+			public void onRegistered(String registrationId) {
+				// TODO Auto-generated method stub
+				mHandler.post(new Runnable() {
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						Log.d("device_token", "device_token:   ---------->>>>>>>>>>>>>>>>>" );
+					}
+				});
+			}
+		};
 
 	@Override
 	public void onClick(View v) {
@@ -750,6 +784,12 @@ public class MainActivity extends Activity implements OnClickListener,
 		cookieSyncManager.sync();
 
 		// String testcookie2 = cookieManager.getCookie(urlpath);
+	}
+	@Override
+	protected void onPause() {
+		super.onPause();
+		//友盟统计
+		MobclickAgent.onPause(this);
 	}
 
 	@Override

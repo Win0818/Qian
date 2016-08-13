@@ -21,6 +21,7 @@ import com.qianft.m.qian.common.Constant;
 import com.qianft.m.qian.common.Global;
 import com.qianft.m.qian.utils.MySharePreData;
 import com.qianft.m.qian.utils.Util;
+import com.umeng.analytics.MobclickAgent;
 
 public class WelcomeActivity extends Activity{
 
@@ -82,6 +83,17 @@ public class WelcomeActivity extends Activity{
 				}
 			}
 		}).start();
+	}
+	
+	@Override
+	protected void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
+	@Override
+	protected void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
 	}
 	
 	/**

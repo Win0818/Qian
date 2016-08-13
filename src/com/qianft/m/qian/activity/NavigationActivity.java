@@ -6,6 +6,7 @@ import com.qianft.m.qian.R;
 import com.qianft.m.qian.adapter.MyViewPageAdapter;
 import com.qianft.m.qian.common.Constant;
 import com.qianft.m.qian.utils.MySharePreData;
+import com.umeng.analytics.MobclickAgent;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -65,7 +66,18 @@ public class NavigationActivity extends Activity implements
 		vpAdapter = new MyViewPageAdapter(views);
 		
 	}
+	@Override
+	protected void onResume() {
+		super.onResume();
+		MobclickAgent.onResume(this);
+	}
 	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		MobclickAgent.onPause(this);
+	}
+
 	/**
 	 * initial data
 	 */
