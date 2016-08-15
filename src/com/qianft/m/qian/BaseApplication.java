@@ -6,9 +6,15 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Map;
 
+import org.greenrobot.eventbus.EventBus;
+
 import android.Manifest.permission;
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningTaskInfo;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -125,9 +131,10 @@ public class BaseApplication extends Application{
 	                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 	                intent.setAction("com.qianft.m.qian.push");
 	                String push_url = pushMap.get("key");
-	                intent.putExtra("Push_Url", push_url);
-	                Log.d(TAG, "Push_Url: --------->>>>>>>>>>>>" + push_url);
-	                startActivity(intent);
+	                EventBus.getDefault().post(push_url);
+	                //intent.putExtra("Push_Url", push_url);
+	               // Log.d(TAG, "Push_Url: --------->>>>>>>>>>>>" + push_url);
+	                //startActivity(intent);
 	        }
 			
 	};
@@ -209,6 +216,15 @@ public class BaseApplication extends Application{
 	        e.printStackTrace();
 	    }
 	    return null;
+	}
+	
+	private boolean isInLauncher() {
+		ActivityManager manager = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
+		String name = manager.getRunningTasks(1).get(0).topActivity.getClassName();
+		if(name.equals("com.android.launcher.Launcher")){
+		return true;
+		}
+		return false;
 	}
                   
 }

@@ -97,8 +97,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private ImageButton mRefreshBtn;
 	private LinearLayout mNoNetworkLinearLayout;
 	private boolean DEBUG = true;
-	//private String mAddress = Constant.Address;
-	private String mAddress = "file:///android_asset/html/index.html";
+	private String mAddress = Constant.Address;
+	//private String mAddress = "file:///android_asset/html/index.html";
 	//private String mAddress = "http://192.168.0.70:8088/Home/Index";
 	private String mShareUrl;
 	private String mTitle;
@@ -165,16 +165,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		String action = getIntent().getAction();
-		if (action != null && action.equals("com.qianft.m.qian.push")) {
-			String Push_Url = getIntent().getStringExtra("Push_Url");
-			mAddress = Push_Url;
-		}
+		
 		setContentView(R.layout.activity_main);
 		mPushAgent = PushAgent.getInstance(this);
 		initView();
 		initData();
-
 	}
 	
 
@@ -209,9 +204,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		EventBus.getDefault().register(this);
 		requestQueue = Volley.newRequestQueue(mContext);
 		
+		PushAgent mPushAgent = PushAgent.getInstance(this);
 		mPushAgent.enable(mRegisterCallback);
 		//mPushAgent.enable();
-		
 		Log.i(TAG, "updateStatus:" + String.format("enabled:%s  isRegistered:%s  device_token:%s",
 				mPushAgent.isEnabled(), mPushAgent.isRegistered(), mPushAgent.getRegistrationId()));
 		cheakVersion();
@@ -224,6 +219,13 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	protected void onResume() {
 		super.onResume();
 
+		String action = getIntent().getAction();
+		LogUtil.d(TAG, "action::  -------  "   + action);
+		if (action != null && action.equals("com.qianft.m.qian.push")) {
+			String Push_Url = getIntent().getStringExtra("Push_Url");
+			//mAddress = Push_Url;
+			mWebView.loadUrl(Push_Url);
+		}
         //友盟统计
 		MobclickAgent.onResume(this);
 		LogUtil.d(TAG, "onResume:  " + Util.WECHAT_CODE);
@@ -790,6 +792,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					
 					@Override
 					public void run() {
+						LogUtil.d(TAG, "wechat_Auth_Login_android  ------------------json"  + json);
 						String mCallback = null;
 						String mCancel = null ;
 						JSONObject jsonObject = null;
@@ -813,7 +816,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
 							returnJson.put("errMsg", "执行成功");
-							
 
 							JSONObject jsonObject2 = new JSONObject();
 							jsonObject2.put("userId", userid);
@@ -1292,6 +1294,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					Constant.WECHAT_LOGIN_SP_NAME, "union_id");
 			mWebView.loadUrl("http://m.qianft.com/UserLogin/WeChatLogin?unionId=UNIONID"
 					.replace("UNIONID", uid));
+		} else if (message.contains("http://")) {
+			mWebView.loadUrl(message);
 		}
 	}
 	/**

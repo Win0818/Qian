@@ -95,7 +95,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 				int errCode = resp.errCode;
 				getResult(code);
 			} else if (resp.getType() == ConstantsAPI.COMMAND_SENDMESSAGE_TO_WX) {
-				Toast.makeText(getApplicationContext(), "分享成功", 2000).show();
+				Toast.makeText(getApplicationContext(), "分享成功", Toast.LENGTH_SHORT).show();
 				this.finish();
 				// 分享成功
 			}
@@ -103,31 +103,28 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 			// resp.toBundle(bundle);
 			// Resp sp = new Resp(bundle);
 			// String code = sp.code;<span style="white-space:pre">
-			// 或者
-			// String code = ((SendAuth.Resp) resp).(BaseResp.ErrCode.ERR_OK);
+			// 或者 String code = ((SendAuth.Resp) resp).(BaseResp.ErrCode.ERR_OK);
 			// 上面的code就是接入指南里要拿到的code
-
 			System.out.println("success");
 			break;
 		case BaseResp.ErrCode.ERR_USER_CANCEL:
 			if (resp.getType() == ConstantsAPI.COMMAND_SENDAUTH) {
-				Toast.makeText(getApplicationContext(), "登录取消", 2000).show();
+				Toast.makeText(getApplicationContext(), "登录取消", Toast.LENGTH_SHORT).show();
 				System.out.println("ERR_USER_CANCEL");
 			} else if (resp.getType() == ConstantsAPI.COMMAND_SENDMESSAGE_TO_WX) {
 				// 分享取消
-				Toast.makeText(getApplicationContext(), "分享取消", 2000).show();
-				
+				Toast.makeText(getApplicationContext(), "分享取消", Toast.LENGTH_SHORT).show();
 				System.out.println("ERR_USER_CANCEL");
 			}
 			this.finish();
 			break;
 		case BaseResp.ErrCode.ERR_AUTH_DENIED:
 			if (resp.getType() == ConstantsAPI.COMMAND_SENDAUTH) {
-				Toast.makeText(getApplicationContext(), "授权成功", 2000).show();
+				Toast.makeText(getApplicationContext(), "授权成功", Toast.LENGTH_SHORT).show();
 				System.out.println("ERR_USER_CANCEL");
 			} else if (resp.getType() == ConstantsAPI.COMMAND_SENDMESSAGE_TO_WX) {
 				// 分享拒绝
-				Toast.makeText(getApplicationContext(), "分享成功", 2000).show();
+				Toast.makeText(getApplicationContext(), "分享成功", Toast.LENGTH_SHORT).show();
 				System.out.println("ERR_USER_CANCEL");
 			}
 			this.finish();
