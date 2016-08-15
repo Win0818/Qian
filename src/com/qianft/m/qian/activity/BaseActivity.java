@@ -12,7 +12,7 @@ public class BaseActivity extends Activity{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		LogUtil.d("BaseActivity", getClass().getSimpleName());
+		LogUtil.d("BaseActivity", "BaseActivity:  " + getClass().getSimpleName());
 		
 		ActivityCollector.addActivity(this);
 		PushAgent.getInstance(this).onAppStart();

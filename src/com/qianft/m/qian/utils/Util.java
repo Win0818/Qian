@@ -30,6 +30,8 @@ public class Util {
 	private IWXAPI wxApi;
 	public static String USER_ID = null;
 	public static String COOKIES = null;
+	public static String SERVER_URL = null;
+	public static String Auth_Success_Url = null;
 	
 	/**
 	 * Bitmap 到字节数组
