@@ -583,7 +583,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
-							returnJson.put("errMsg", "OK");
+							returnJson.put("errMsg", "执行成功");
 							
 							
 							JSONObject jsonObject2 = new JSONObject();
@@ -649,15 +649,15 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							returnJson = new JSONObject();
 						    returnJson.put("userVersionCode", Global.localVersionCode);
 							returnJson.put("userVersionName", Global.localVersionName);
-							returnJson.put("errCode", "0005");
-							returnJson.put("errMsg", "登录成功");
+							returnJson.put("errCode", "0000");
+							returnJson.put("errMsg", "执行成功");
 							
 							JSONObject jsonObject2 = new JSONObject();
 							jsonObject2.put("loginUrl", mLoginUrl);
 							returnJson.put("ref", jsonObject2);
 						} catch (Exception e) {
 							try {
-								returnJson.put("errCode", "0006");
+								returnJson.put("errCode", "0004");
 								returnJson.put("errMsg", "登录失败");
 							} catch (JSONException e1) {
 								e1.printStackTrace();
@@ -706,8 +706,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							takePhoto(mSaveTargetDir, mPicFileName);
 							
 							returnJson = new JSONObject();
-							returnJson.put("errCode", "0008");
-							returnJson.put("errMsg", "保存成功");
+							returnJson.put("errCode", "0000");
+							returnJson.put("errMsg", "执行成功");
 							
 
 							JSONObject jsonObject2 = new JSONObject();
@@ -719,7 +719,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						} catch (Exception e) {
 							e.printStackTrace();
 							try {
-								returnJson.put("errCode", "0009");
+								returnJson.put("errCode", "0006");
 								returnJson.put("errMsg", "保存失败");
 							} catch (JSONException e2) {
 								// TODO Auto-generated catch block
@@ -786,8 +786,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							
 							
 							returnJson = new JSONObject();
-							returnJson.put("errCode", "0003");
-							returnJson.put("errMsg", "授权成功");
+							returnJson.put("errCode", "0000");
+							returnJson.put("errMsg", "执行成功");
 							
 
 							JSONObject jsonObject2 = new JSONObject();
@@ -802,7 +802,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							}
 						} catch (JSONException e) {
 							try {
-								returnJson.put("errCode", "0004");
+								returnJson.put("errCode", "0003");
 								returnJson.put("errMsg", "授权失败");
 							} catch (JSONException e2) {
 								// TODO Auto-generated catch block
@@ -1001,8 +1001,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							File mTempFile = new File(picFileName);
 							returnJson = new JSONObject();
 							
-							returnJson.put("errCode", "0008");
-							returnJson.put("errMsg", "保存成功");
+							returnJson.put("errCode", "0000");
+							returnJson.put("errMsg", "执行成功");
 							
 							JSONObject jsonObject2 = new JSONObject();
 							jsonObject2.put("imageUrl", imageUrl);
@@ -1018,7 +1018,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						        }
 
 						        if (totalSize - mTempFile.length() > storage) {
-						        	returnJson.put("errCode", "0010");
+						        	returnJson.put("errCode", "0007");
 						        	returnJson.put("errMsg", "存储不足");
 						            //throw new NoMemoryException("SD card no memory.");
 						        }
@@ -1079,7 +1079,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					String mCallback = jsonObject.getString("callback");
 					
 					returnJson = new JSONObject();
-					returnJson.put("err", Global.localVersionCode);
+					returnJson.put("errCode", "0000");
+					returnJson.put("errMsg", "执行成功");
 					returnJson.put("userVersionCode", Global.localVersionCode);
 					returnJson.put("userVersionName", Global.localVersionName);
 					String result = returnJson.toString();
