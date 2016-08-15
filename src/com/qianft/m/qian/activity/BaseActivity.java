@@ -5,7 +5,6 @@ import android.os.Bundle;
 
 import com.qianft.m.qian.utils.ActivityCollector;
 import com.qianft.m.qian.utils.LogUtil;
-import com.umeng.message.PushAgent;
 
 public class BaseActivity extends Activity{
 	
@@ -16,7 +15,6 @@ public class BaseActivity extends Activity{
 		
 		ActivityCollector.addActivity(this);
 		//友盟推送
-		PushAgent.getInstance(this).onAppStart();
 		
 	}
 	

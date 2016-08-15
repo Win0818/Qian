@@ -25,7 +25,7 @@ public class BaseApplication extends Application{
 		super.onCreate();
 		initLocalVersion();
 		
-		Log.d("Wing", "device----->>>>>" + getDeviceInfo(this));
+	//	Log.d("Wing", "device----->>>>>" + getDeviceInfo(this));
 		
 	}
 	

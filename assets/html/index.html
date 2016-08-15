@@ -81,7 +81,7 @@
 	
 	function callAndroid_js() {
 
-		 window.jsObj.HtmlcallJava2(text);
+		 window.jsObj.Js_Invoke_Android_Main_Interface('HtmlcallJava2', text);
 		//eval("var obj = " + window.jsObj.HtmlcallJava2(text, "failure"));
 		//alert('typeof:'+typeof(obj)); 
 		//alert('success:'+obj); 
@@ -92,7 +92,7 @@
 	function failure(json) {
 		var obj = eval(json);
 		
-		alert("fffffff" + json.success  + "    failure: " + json.failure);
+		alert("fffffff" + json.success  + "  failure: " + json.failure);
 		eval("alert('fffffffeeeee')");
 	}
 	
