@@ -21,7 +21,6 @@
         android:icon="@drawable/app_icon"
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Light.NoTitleBar" >
-<<<<<<< HEAD
         
         <meta-data
 		    android:name="UMENG_APPKEY"
@@ -35,20 +34,7 @@
 		    android:name="UMENG_CHANNEL"
 		    android:value="umeng" >
 		</meta-data>
-=======
-        <meta-data
-            android:name="UMENG_APPKEY"
-            android:value=" 57a96f7a67e58ed15b002a42" >
-         </meta-data>
-        <meta-data
-		    android:name="UMENG_MESSAGE_SECRET"
-		    android:value="5cfc266983e8d69e920e3730a740d6f6" >
-        </meta-data>
-        <meta-data
-            android:name="UMENG_CHANNEL"
-            android:value="Umeng" >
-        </meta-data>
->>>>>>> js_interface
+
         <activity
             android:name=".activity.WelcomeActivity"
             android:label="@string/app_name" 
