@@ -74,6 +74,10 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 		mContext = this;
 	}
 
+	//检查微信是否安装 
+	  public boolean isWXAppInstalled(){ 
+	    return api.isWXAppInstalled(); 
+	  }
 	@Override
 	public void onReq(BaseReq arg0) {
 	}
@@ -113,7 +117,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 				System.out.println("ERR_USER_CANCEL");
 			} else if (resp.getType() == ConstantsAPI.COMMAND_SENDMESSAGE_TO_WX) {
 				// 分享取消
-				Toast.makeText(getApplicationContext(), "分享取消", Toast.LENGTH_SHORT).show();
+				Toast.makeText(getApplicationContext(), "取消", Toast.LENGTH_SHORT).show();
 				System.out.println("ERR_USER_CANCEL");
 			}
 			this.finish();
@@ -226,7 +230,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 					userInfoMap.put("userid", userid);
 					
 					if (state.equals("wechat_sdk_demo_test")) {
-						String result = HttpUtils.postRequest(PostUserInfoUrl,
+						String result = HttpUtils.postRequest(Util.SERVER_URL,
 								userInfoMap, WXEntryActivity.this);
 						LogUtil.d("Wing", "--post commit---" + result);
 					}

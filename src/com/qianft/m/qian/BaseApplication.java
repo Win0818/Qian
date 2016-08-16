@@ -132,9 +132,9 @@ public class BaseApplication extends Application{
 	                intent.setAction("com.qianft.m.qian.push");
 	                String push_url = pushMap.get("key");
 	                EventBus.getDefault().post(push_url);
-	                //intent.putExtra("Push_Url", push_url);
-	               // Log.d(TAG, "Push_Url: --------->>>>>>>>>>>>" + push_url);
-	                //startActivity(intent);
+	                intent.putExtra("Push_Url", push_url);
+	                Log.d(TAG, "Push_Url: --------->>>>>>>>>>>>" + push_url);
+	                startActivity(intent);
 	        }
 			
 	};

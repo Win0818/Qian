@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.qianft.m.qian"
-    android:versionCode="20160801"
+    android:versionCode="20160800"
     android:versionName="1.2" >
 
     <uses-sdk
@@ -32,7 +32,7 @@
 		</meta-data>
 		<meta-data
 		    android:name="UMENG_CHANNEL"
-		    android:value="umeng" >
+		    android:value="huawei" >
 		</meta-data>
 
         <activity

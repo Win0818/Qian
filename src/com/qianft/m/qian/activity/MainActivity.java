@@ -104,7 +104,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private String mTitle;
 	private Bitmap mIcom;
 	private long exitTime = 0;
-	private String mNowUrl = "";//"http://m.qianft.com/";
+	private String mNowUrl = "http://m.qianft.com/";
 	private IWXAPI wxApi;
 	private GlobalProgressDialog mGlobalProgressDialog;
 	private SharePopMenu popMenu;
@@ -219,11 +219,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	protected void onResume() {
 		super.onResume();
 
+		Bundle bun = getIntent().getExtras();
 		String action = getIntent().getAction();
 		LogUtil.d(TAG, "action::  -------  "   + action);
 		if (action != null && action.equals("com.qianft.m.qian.push")) {
 			String Push_Url = getIntent().getStringExtra("Push_Url");
-			//mAddress = Push_Url;
 			mWebView.loadUrl(Push_Url);
 		}
         //友盟统计
@@ -235,11 +235,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			
 			@Override
 			public void onRegistered(String registrationId) {
-				// TODO Auto-generated method stub
 				mHandler.post(new Runnable() {
 					@Override
 					public void run() {
-						// TODO Auto-generated method stub
 						Log.d("device_token", "device_token:   ---------->>>>>>>>>>>>>>>>>" );
 					}
 				});
@@ -319,7 +317,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				public boolean onKey(View v, int keyCode, KeyEvent event) {
 					if (keyCode == KeyEvent.KEYCODE_BACK && mNowUrl != null
 							&& mNowUrl.equals("http://m.qianft.com/")) {
-
 						return false;
 					} else if (keyCode == KeyEvent.KEYCODE_BACK
 							&& mWebView.canGoBack()) {
@@ -336,6 +333,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					if (DEBUG)
 						Log.e("Wing", "..shouldOverrideUrlLoading.. url=" + url);
 					mNowUrl = url;
+					Log.e("Wing", "..mNowUrl =" + mNowUrl);
 					view.loadUrl(url);
 					return true;
 				}
@@ -417,12 +415,18 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		// TODO Auto-generated method stub
-
 		// if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
 		// mWebView.goBack(); return false; } else
-		if (keyCode == KeyEvent.KEYCODE_BACK /* && !mWebView.canGoBack() */) {
+		LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
+		if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.getUrl().equals("http://m.qianft.com/")) {
 			exitApp();
 			return false;
+		} else {
+			if ( mWebView.canGoBack()) {
+				mWebView.loadUrl("javascript:window.history.back();");
+			} else {
+				mWebView.loadUrl("http://m.qianft.com/");
+			}
 		}
 		return super.onKeyDown(keyCode, event);
 	}
@@ -524,7 +528,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private Object getHtmlObject() {
 
 		Object insertObj = new Object() {
-			
 			@JavascriptInterface
 			public void Js_Invoke_Android_Main_Interface(String functionName, String json) {
 				
@@ -603,8 +606,13 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							mTitle = jsonObject.getString("title");
 							mDescription = jsonObject.getString("desc");
 							mImageUrl = jsonObject.getString("imgUrl");
-							mCallback = jsonObject.getString("callback");
-							mCancel = jsonObject.getString("cancel");
+							
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
+							if (jsonObject.has("cancel")) {
+								mCancel = jsonObject.getString("cancel");
+							}
 							popMenu.showAsDropDown(MainActivity.this
 									.findViewById(R.id.main_root));
 							
@@ -664,7 +672,12 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						try {
 							JSONObject jsonObject = new JSONObject(json);
 							String mLoginUrl = jsonObject.getString("loginUrl");
-							mCallback = jsonObject.getString("callback");
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
+							if (jsonObject.has("cancel")) {
+								mCancel = jsonObject.getString("cancel");
+							}
 							String uid = MySharePreData.GetData(MainActivity.this,
 									Constant.WECHAT_LOGIN_SP_NAME, "union_id");
 							if (TextUtils.isEmpty(uid)) {
@@ -729,7 +742,10 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							jsonObject = new JSONObject(json);
 							String mSaveTargetDir = jsonObject.getString("saveTargetDir");
 							String mPicFileName = jsonObject.getString("picFileName");
-							mCallback = jsonObject.getString("callback");
+							
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
 							takePhoto(mSaveTargetDir, mPicFileName);
 							
 							returnJson = new JSONObject();
@@ -803,15 +819,19 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							String userid = jsonObject.getString("userId");
 							String postServerUrl = jsonObject.getString("postServerUrl");
 							String auth_Success_Url = jsonObject.getString("auth_Success_Url");
-							mCallback = jsonObject.getString("callback");
-							mCancel = jsonObject.getString("cancel");
-							
+							LogUtil.d(TAG, "jsonObject.has(callback) "  + jsonObject.has("callback"));
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
+							LogUtil.d(TAG, "jsonObject.has(cancel): "   + jsonObject.has("cancel"));
+							if (jsonObject.has("cancel")) {
+								mCancel = jsonObject.getString("cancel");
+							}
 							LogUtil.d("Wing", "userid:   " + userid);
 							Util.SERVER_URL = postServerUrl;
 							Util.Auth_Success_Url = auth_Success_Url;
 							Util.USER_ID = userid;
 							loginWechat();
-							
 							
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
@@ -824,18 +844,16 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							
 							returnJson.put("ref", jsonObject2);
 							
-							if (!TextUtils.isEmpty(mCallback)) {
+							//if (!TextUtils.isEmpty(mCallback)) {
 								//mWebView.loadUrl("javascript:" + mSuccess + "(" + result +")" );
-							}
+							//}
 						} catch (JSONException e) {
 							try {
 								returnJson.put("errCode", "0003");
 								returnJson.put("errMsg", "授权失败");
 							} catch (JSONException e2) {
-								// TODO Auto-generated catch block
 								e2.printStackTrace();
 							}
-							
 							e.printStackTrace();
 							final String errorMsg = getErrorInfo(e);
 					        Map<String, String> map = new HashMap<String, String>(); 
@@ -850,6 +868,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							}
 						}finally {
 							if (!TextUtils.isEmpty(mCallback) && returnJson != null) {
+								LogUtil.d(TAG, "returnJson:   " + returnJson);
 								String result = returnJson.toString();
 								mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
 							}
@@ -1023,8 +1042,10 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							String savePath = jsonObject.getString("savePath");
 							String picFileName = jsonObject.getString("picFileName");
 							long totalSize = jsonObject.getInt("totalSize");
-							mCallback = jsonObject.getString("callback");
 							
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
 							File mTempFile = new File(picFileName);
 							returnJson = new JSONObject();
 							
@@ -1082,7 +1103,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				});
 				
 			}
-
 			@JavascriptInterface
 			public void clearUserInfo_android() {
 				MySharePreData.SetData(mContext, Constant.WECHAT_LOGIN_SP_NAME,
@@ -1101,10 +1121,12 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				
 				JSONObject jsonObject = null;
 				JSONObject returnJson = null;
+				String mCallback = null;
 				try {
 					jsonObject = new JSONObject(json);
-					String mCallback = jsonObject.getString("callback");
-					
+					if (jsonObject.has("callback")) {
+						mCallback = jsonObject.getString("callback");
+					}
 					returnJson = new JSONObject();
 					returnJson.put("errCode", "0000");
 					returnJson.put("errMsg", "执行成功");
@@ -1279,6 +1301,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		removeAllCookie();
 		EventBus.getDefault().unregister(this);
 	}
+	
 	/**
 	 * EventBus2.0 微信授权
 	 * @param message
@@ -1294,9 +1317,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					Constant.WECHAT_LOGIN_SP_NAME, "union_id");
 			mWebView.loadUrl("http://m.qianft.com/UserLogin/WeChatLogin?unionId=UNIONID"
 					.replace("UNIONID", uid));
-		} else if (message.contains("http://")) {
+		} /*else if (message.contains("http://")) {
 			mWebView.loadUrl(message);
-		}
+		}*/
 	}
 	/**
 	 * 检查更新版本
@@ -1399,7 +1422,14 @@ public class MainActivity extends BaseActivity implements OnClickListener,
         pw.close();  
         String error= writer.toString();  
         return error;  
-        
+    }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+    	super.onNewIntent(intent);
+    	
+    	setIntent(intent);
+    	LogUtil.d(TAG, "intent:   " + intent);
     }
 
 }
