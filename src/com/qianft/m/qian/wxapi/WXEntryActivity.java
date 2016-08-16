@@ -18,6 +18,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.qianft.m.qian.common.Constant;
+import com.qianft.m.qian.common.Global;
 import com.qianft.m.qian.utils.HttpUtils;
 import com.qianft.m.qian.utils.JsonUtils;
 import com.qianft.m.qian.utils.LogUtil;
@@ -87,6 +88,9 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 		// LogManager.show("Wing", "resp.errCode:" + resp.errCode +
 		// ",resp.errStr:"
 		// + resp.errStr, 1);
+		if (resp != null) {
+			Global.RESP = resp;
+		}
 		switch (resp.errCode) {
 		case BaseResp.ErrCode.ERR_OK:
 			Log.i(TAG, "onResp");

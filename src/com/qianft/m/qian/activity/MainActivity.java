@@ -104,7 +104,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private String mTitle;
 	private Bitmap mIcom;
 	private long exitTime = 0;
-	private String mNowUrl = "http://m.qianft.com/";
+	private String mNowUrl = "";//"http://m.qianft.com/";
 	private IWXAPI wxApi;
 	private GlobalProgressDialog mGlobalProgressDialog;
 	private SharePopMenu popMenu;
@@ -120,9 +120,10 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private String downloadUrl = null;
 	private String newVersionName = null;
 	private String packageSize = null;
-	private String updateContent = null;
+	private String[] updateContentDetail = new String[3];  /*{"提升速度和稳定性", "增加消息推送等新功能", "修复部分Bug"}*/
 	private int newVersionCode = 1;
 	private PushAgent mPushAgent;
+	private boolean pushFlag= true;
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -144,11 +145,15 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					newVersionName = jsonObject.getString("New_VersionName");
 					newVersionCode = jsonObject.getInt("New_VersionCode");
 					packageSize = jsonObject.getString("Package_Size");
-					updateContent = jsonObject.getString("Update_Content");
+					String updateContent = jsonObject.getString("Update_Content");
+					//String updateContent = jsonObject.getString(Update_Content);
+					if (jsonObject.has("Update_Content") && updateContent.contains("\r\n")) {
+						updateContentDetail = updateContent.split("\r\n", 3);
+					}
 					LogUtil.d("Wing", "response:  " + jsonObject.toString()
 							+ "-----" + downloadUrl + "-----" + newVersionName
 							+ "-----" + newVersionCode + "-----" + packageSize
-							+ "-----" + updateContent);
+							+ "-----" + updateContentDetail.toString());
 					upgradeVersion();
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
@@ -221,10 +226,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 
 		Bundle bun = getIntent().getExtras();
 		String action = getIntent().getAction();
-		LogUtil.d(TAG, "action::  -------  "   + action);
-		if (action != null && action.equals("com.qianft.m.qian.push")) {
+		Log.i(TAG, "action::  -------  "   + action);
+		if (pushFlag && action != null && action.equals("com.qianft.m.qian.push")) {
 			String Push_Url = getIntent().getStringExtra("Push_Url");
 			mWebView.loadUrl(Push_Url);
+			pushFlag = false;
 		}
         //友盟统计
 		MobclickAgent.onResume(this);
@@ -316,7 +322,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				@Override
 				public boolean onKey(View v, int keyCode, KeyEvent event) {
 					if (keyCode == KeyEvent.KEYCODE_BACK && mNowUrl != null
-							&& mNowUrl.equals("http://m.qianft.com/")) {
+							&& mWebView.getUrl().equals("http://m.qianft.com/")) {
 						return false;
 					} else if (keyCode == KeyEvent.KEYCODE_BACK
 							&& mWebView.canGoBack()) {
@@ -562,7 +568,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						case "getUserAPPInfo_android":
 							getUserAPPInfo_android(json);
 							break;
-						case "ssss":
+						case "startQQDialog_android":
+							startQQDialog_android(json);
+						   break;
+						case "clearUserInfo_android":
+							clearUserInfo_android(json);
 						   break;
 						default:
 							try {
@@ -768,7 +778,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 								// TODO Auto-generated catch block
 								e2.printStackTrace();
 							}
-							
 							final String errorMsg = getErrorInfo(e);
 					        Map<String, String> map = new HashMap<String, String>(); 
 					        map.put("logInfo ", errorMsg);  
@@ -1105,8 +1114,33 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			@JavascriptInterface
 			public void clearUserInfo_android() {
+				
 				MySharePreData.SetData(mContext, Constant.WECHAT_LOGIN_SP_NAME,
 						"union_id", "");
+			}
+			
+			public void clearUserInfo_android(String json) {
+				
+				JSONObject jsonObject = null;
+				JSONObject returnJson = null;
+				String mCallback = null;
+				try {
+					jsonObject = new JSONObject(json);
+					if (jsonObject.has("callback")) {
+						mCallback = jsonObject.getString("callback");
+					}
+					returnJson = new JSONObject();
+					returnJson.put("errCode", "0000");
+					returnJson.put("errMsg", "执行成功");
+					MySharePreData.SetData(mContext, Constant.WECHAT_LOGIN_SP_NAME,
+							"union_id", "");
+					String result = returnJson.toString();
+					mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+				
+				
 			}
 
 			@JavascriptInterface
@@ -1115,6 +1149,32 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						"UIN", qqId);
 				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
 			}
+			
+			/*public void startQQDialog_android(String json) {
+				
+				JSONObject jsonObject = null;
+				JSONObject returnJson = null;
+				String mCallback = null;
+				try {
+					jsonObject = new JSONObject(json);
+					
+					String mQQID = jsonObject.getString("qqId");
+					if (jsonObject.has("callback")) {
+						mCallback = jsonObject.getString("callback");
+					}
+					returnJson = new JSONObject();
+					returnJson.put("errCode", "0000");
+					returnJson.put("errMsg", "执行成功");
+					String url = "mqqwpa://im/chat?chat_type=wpa&uin=UIN".replace(
+							"UIN", mQQID);
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+					String result = returnJson.toString();
+					mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			
+			}*/
 			
 			@JavascriptInterface
 			public void  getUserAPPInfo_android(String json) {
@@ -1352,7 +1412,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		boolean isUpdate = MySharePreData.GetBooleanTrueData(mContext,
 					Constant.UPDATE_DIALOG, newVersionCode + "");
 		if (Global.localVersionCode < newVersionCode && isUpdate) {
-			LogUtil.d("Wing", "Global.serverVersionCode------>>>>>>>>");
+			LogUtil.i("Wing", "Global.serverVersionCode------>>>>>>>>");
 			// 发现新版本，提示用户更新
 			final AlertDialog alertDialog = new AlertDialog.Builder(
 					MainActivity.this).setCancelable(true).create();
@@ -1363,11 +1423,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			TextView tv_title = (TextView) window.findViewById(R.id.version_title);
 			tv_title.setText("钱富通" + newVersionName + "震撼发布");
 			TextView tv_UpdateContent_1 = (TextView) window.findViewById(R.id.update_content_1);
-			tv_UpdateContent_1.setText("1: 更新内容： " + packageSize);
+			tv_UpdateContent_1.setText("1:" + updateContentDetail[0]);
 			TextView tv_UpdateContent_2 = (TextView) window.findViewById(R.id.update_content_2);
-			tv_UpdateContent_2.setText("2:更新内容： " + updateContent);
+			tv_UpdateContent_2.setText("2:" + updateContentDetail[1]);
 			TextView tv_UpdateContent_3 = (TextView) window.findViewById(R.id.update_content_3);
-			tv_UpdateContent_3.setText("3:更新内容： " + updateContent);
+			tv_UpdateContent_3.setText("3:" + updateContentDetail[2]);
 			ImageButton updateNow = (ImageButton) window.findViewById(R.id.update_now);
 			ImageButton updateAfter = (ImageButton) window.findViewById(R.id.update_after);
 
@@ -1376,7 +1436,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				public void onClick(View v) {
 					Intent intent = new Intent(MainActivity.this,
 							AppUpgradeService.class);
-					intent.putExtra("downloadUrl", Constant.mLatestVersionDownload);
+					LogUtil.i(TAG, "updateNow.setOnClickListener");
+					intent.putExtra("downloadUrl", downloadUrl);
 					startService(intent);
 					alertDialog.dismiss();
 				}
@@ -1427,9 +1488,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
     @Override
     protected void onNewIntent(Intent intent) {
     	super.onNewIntent(intent);
+    	if (intent.getAction().equals("com.qianft.m.qian.push")) {
+    		setIntent(intent);
+        	LogUtil.d(TAG, "intent:   " + intent);
+    	}
     	
-    	setIntent(intent);
-    	LogUtil.d(TAG, "intent:   " + intent);
     }
 
 }

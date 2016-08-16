@@ -92,7 +92,7 @@ public class AppUpgradeService extends Service {
 			//if (destFile.exists() && destFile.isFile()
 				//	&& checkApkFile(destFile.getPath())) {
 				
-				LogUtil.d("Wing", "downloaded ------>>>>>>>>  "  + destFile);
+				LogUtil.i("Wing", "downloaded ------>>>>>>>>  "  + destFile);
 				Message msg = mHandler.obtainMessage();
 				msg.what = DOWNLOAD_SUCCESS;
 				mHandler.sendMessage(msg);
@@ -110,7 +110,7 @@ public class AppUpgradeService extends Service {
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		mDownloadUrl = intent.getStringExtra("downloadUrl");
 
-		LogUtil.d("Wing", "mDownloadUrl:    " +  mDownloadUrl);
+		LogUtil.i("Wing", "mDownloadUrl:    " +  mDownloadUrl);
 		if (Environment.getExternalStorageState().equals(
 				android.os.Environment.MEDIA_MOUNTED)) {
 			destDir = new File(Environment.getExternalStorageDirectory()
@@ -135,7 +135,7 @@ public class AppUpgradeService extends Service {
 
 		mNotification.contentView = new RemoteViews(getApplication()
 				.getPackageName(), R.layout.app_upgrade_notification);
-
+		
 		Intent completingIntent = new Intent();
 		completingIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		completingIntent.setClass(getApplication().getApplicationContext(),
@@ -162,34 +162,38 @@ public class AppUpgradeService extends Service {
 
 		@Override
 		public void run() {
-			LogUtil.d("Wing", "mDownloadUrl:  AppUpgradeThread    " +  mDownloadUrl);
+			LogUtil.i("Wing", "mDownloadUrl:  AppUpgradeThread    " +  mDownloadUrl);
 			if (Environment.getExternalStorageState().equals(
 					android.os.Environment.MEDIA_MOUNTED)) {
-				LogUtil.d("Wing", "mDownloadUrl:  AppUpgradeThread    MEDIA_MOUNTED" +  mDownloadUrl +  "destDir :" +  destDir);
+				LogUtil.i("Wing", "mDownloadUrl:  AppUpgradeThread    MEDIA_MOUNTED" +  mDownloadUrl +  "destDir :" +  destDir);
 				if (destDir == null) {
 					destDir = new File(Environment
 							.getExternalStorageDirectory().getPath()
 							+ Global.downloadDir);
+					LogUtil.i("Wing", "mDownloadUrl:  AppUpgradeThread    getExternalStorageDirectory()" +  destDir);
 				}
 				if (destDir.exists() || destDir.mkdirs()) {
 					//destFile = new File(destDir.getPath() + "/"
 						//	+ URLEncoder.encode(mDownloadUrl)
-					LogUtil.d("Wing", "mDownloadUrl:  AppUpgradeThread    destDir.mkdirs()" +  mDownloadUrl);
+					LogUtil.i("Wing", "mDownloadUrl:  AppUpgradeThread    destDir.mkdirs()" +  mDownloadUrl);
 					destFile = new File(destDir.getPath(), "Qianft" + ".apk");
 					if (destFile.exists() && destFile.isFile()
 							&& checkApkFile(destFile.getPath())) {
 						install(destFile);
 					} else {
+					
+							LogUtil.i("Wing", "mDownloadUrl:  AppUpgradeThread   DownloadUtils.download++++++++");
+							try {
+								DownloadUtils.download(mDownloadUrl, destFile,
+										false, downloadListener);
+							} catch (Exception e) {
+								// TODO Auto-generated catch block
+								Message msg = mHandler.obtainMessage();
+								msg.what = DOWNLOAD_FAIL;
+								mHandler.sendMessage(msg);
+								e.printStackTrace();
+							}
 						
-						try {
-							DownloadUtils.download(mDownloadUrl, destFile,
-									false, downloadListener);
-						} catch (Exception e) {
-							Message msg = mHandler.obtainMessage();
-							msg.what = DOWNLOAD_FAIL;
-							mHandler.sendMessage(msg);
-							e.printStackTrace();
-						}
 					}
 				}
 			}

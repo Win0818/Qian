@@ -46,10 +46,10 @@ public class Constant {
 	 */
 	public static final String SERVER1 = "http://192.168.0.70:8088/";// 本地服务器
 	public static final String SERVER = "http://m.qianft.com/";     //线上服务器
-	public static final String URL_IMAGE = SERVER + "Assets/Imgs/Home/Welcome.png"; 
-	
+	public static final String URL_IMAGE = SERVER + "App/GetAppImg/0";  //"Assets/Imgs/Home/Welcome.png"; 
 	public static final String Address = "http://m.qianft.com/";
-	public static final String downloadNewApk = SERVER + "app/GetAppVersion";
+	
+	public static final String downloadNewApk = SERVER + "app/GetAppVersion/0";  //app版本信息
 	
 	public static final String mLatestVersionDownload = SERVER + "app/GetAppAPK";
 	

@@ -50,7 +50,7 @@ public class BaseApplication extends Application{
 		mPushAgent.setMessageHandler(messageHandler);
 
 
-	//	Log.d("Wing", "device----->>>>>" + getDeviceInfo(this));
+		Log.d("Wing", "device----->>>>>" + getDeviceInfo(this));
 
 	}
 	

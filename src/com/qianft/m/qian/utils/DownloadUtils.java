@@ -1,10 +1,13 @@
 package com.qianft.m.qian.utils;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.http.Header;
@@ -17,6 +20,12 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import com.qianft.m.qian.common.Global;
+
+import android.app.ProgressDialog;
+import android.os.Environment;
+import android.util.Log;
+
 public class DownloadUtils {
     private static final int CONNECT_TIMEOUT = 10000;
     private static final int DATA_TIMEOUT = 40000;
@@ -27,7 +36,7 @@ public class DownloadUtils {
         public void downloaded();
     }
 
-    public static long download(String urlStr, File dest, boolean append, DownloadListener downloadListener) throws Exception {
+    public static long download(String urlStr, File dest, boolean append, DownloadListener downloadListener)  throws Exception{
         int downloadProgress = 0;
         long remoteSize = 0;
         int currentSize = 0;
@@ -109,4 +118,83 @@ public class DownloadUtils {
         }
         return totalSize;
     }
+    
+    public static void download_2(final String urlStr, final File dest, final DownloadListener downloadListener) {
+		
+		new Thread() {
+			
+			@Override
+			public void run() {
+				int downloadProgress = 0;
+		        long remoteSize = 0;
+		        int currentSize = 0;
+		        long totalSize = -1;
+				if (Environment.getExternalStorageState().equals(
+						Environment.MEDIA_MOUNTED)) {
+					URL url ;
+					try {
+						url = new URL(urlStr);
+						Log.i("Wing", "=------picture---URL---"
+								+ urlStr);
+						String rootPath = Environment.getExternalStorageDirectory().toString();
+						/*File pathDir = new File(rootPath + savePath);
+						if (!pathDir.exists()) {
+							pathDir.mkdirs();
+						}*/
+						//File outputImage = new File(pathDir,
+						//		picFileName);
+						/*try {
+							if (outputImage.exists()) {
+								outputImage.delete();
+							}
+							outputImage.createNewFile();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}*/
+						HttpURLConnection conn = (HttpURLConnection) url
+								.openConnection();
+						conn.setConnectTimeout(5000);
+						// 获取到文件的大小
+						conn.getContentLength();
+						InputStream is = conn.getInputStream();
+						
+						/*File updatefile = new File(
+						Environment.getExternalStorageDirectory()+ "/" + savePath +"/"+ picFileName + ".jpg");
+						if (updatefile.exists()) {
+							updatefile.delete();
+							updatefile.createNewFile();
+						} else {
+							updatefile.createNewFile();
+						}*/
+						FileOutputStream fos = new FileOutputStream(dest);
+
+						BufferedInputStream bis = new BufferedInputStream(is);
+						byte[] buffer = new byte[1024];
+						int len;
+						while ((len = bis.read(buffer)) != -1 ) {
+							fos.write(buffer, 0, len);
+							totalSize += len;
+		                    if(downloadListener!= null){
+		                        downloadProgress = (int) (totalSize*100/remoteSize);
+		                        downloadListener.downloading(downloadProgress);
+		                    }
+						}
+						fos.close();
+						bis.close();
+						is.close();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}finally {
+						
+					}
+					if(downloadListener!= null){
+			        	LogUtil.d("Wing", "downloadListener------------>>>>>>>>>>>");
+			            downloadListener.downloaded();
+			        }
+				}
+			}
+		}.start();
+	}
+    
+   
 }
