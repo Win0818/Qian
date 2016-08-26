@@ -15,6 +15,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -53,7 +54,8 @@ public class AppUpgradeService extends Service {
 				Toast.makeText(getApplicationContext(),
 						R.string.app_upgrade_download_sucess, Toast.LENGTH_LONG)
 						.show();
-				install(destFile);
+				Log.i("wing", "downloaded: -------------->>>>>>>>>>> DOWNLOAD_SUCCESS");
+				//install(destFile);
 				stopSelf();
 				break;
 			case DOWNLOAD_FAIL:
@@ -193,7 +195,6 @@ public class AppUpgradeService extends Service {
 								mHandler.sendMessage(msg);
 								e.printStackTrace();
 							}
-						
 					}
 				}
 			}

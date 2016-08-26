@@ -22,5 +22,4 @@ public class ShareObject {
 		this.imageId = imageId;
 	}
 	
-	
 }

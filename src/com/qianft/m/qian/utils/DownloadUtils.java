@@ -20,29 +20,27 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
-import com.qianft.m.qian.common.Global;
-
-import android.app.ProgressDialog;
 import android.os.Environment;
 import android.util.Log;
 
 public class DownloadUtils {
     private static final int CONNECT_TIMEOUT = 10000;
     private static final int DATA_TIMEOUT = 40000;
-    private final static int DATA_BUFFER = 8192;
+    private final static int DATA_BUFFER =   1024;//8192;
 
     public interface DownloadListener {
         public void downloading(int progress);
         public void downloaded();
     }
 
-    public static long download(String urlStr, File dest, boolean append, DownloadListener downloadListener)  throws Exception{
+    @SuppressWarnings("deprecation")/*throws Exception*/
+	public static long download(String urlStr, File dest, boolean append, DownloadListener downloadListener)  {
         int downloadProgress = 0;
         long remoteSize = 0;
         int currentSize = 0;
         long totalSize = -1;
         
-        LogUtil.d("Wing", "download:   " + urlStr);
+        LogUtil.i("Wing", "download:   " + urlStr);
         if(!append && dest.exists() && dest.isFile()) {
             dest.delete();
         }
@@ -53,11 +51,19 @@ public class DownloadUtils {
                 fis = new FileInputStream(dest);
                 currentSize = fis.available();
             } catch(IOException e) {
-                throw e;
+                //throw e;
+            	e.printStackTrace();
+            	
             } finally {
-                if(fis != null) {
-                    fis.close();
-                }
+               
+                    try {
+                    	 if(fis != null) {
+						    fis.close();
+                    	 }
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
             }
         }
 
@@ -77,7 +83,8 @@ public class DownloadUtils {
         try {
             HttpResponse response = httpClient.execute(request);
             if(response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                is = response.getEntity().getContent();
+               
+					is = response.getEntity().getContent();
                 remoteSize = response.getEntity().getContentLength();
                 Header contentEncoding = response.getFirstHeader("Content-Encoding");
                 if(contentEncoding != null && contentEncoding.getValue().equalsIgnoreCase("gzip")) {
@@ -99,32 +106,50 @@ public class DownloadUtils {
                     totalSize = 0;
                 }
             }
-        } finally {
-            if(os != null) {
-                os.close();
-            }
-            if(is != null) {
-                is.close();
-            }
+        } catch (IllegalStateException e) {
+        	LogUtil.i("Wing", "download  IllegalStateException---->>>>>>>>>>>");
+        }  catch (IOException e) {
+        	LogUtil.i("Wing", "download   IOException----------->>>>>>>>>>>");
+        }
+        
+        finally {
+            
+                try {
+                	if(os != null) {
+					os.close();
+                	}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+            
+                try {
+                	if(is != null) {
+					is.close();
+                	}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
         }
 
         if(totalSize < 0) {
-            throw new Exception("Download file fail: " + urlStr);
+            /*try {
+				throw new Exception("Download file fail: " + urlStr);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
         }
 
        if(downloadListener!= null){
-        	LogUtil.d("Wing", "downloadListener------------>>>>>>>>>>>");
+        	LogUtil.i("Wing", "downloadListener------------>>>>>>>>>>>");
             downloadListener.downloaded();
         }
         return totalSize;
     }
     
-    public static void download_2(final String urlStr, final File dest, final DownloadListener downloadListener) {
-		
-		new Thread() {
-			
-			@Override
-			public void run() {
+    public static void download_2(String urlStr,  boolean append,  File dest,  DownloadListener downloadListener) {
 				int downloadProgress = 0;
 		        long remoteSize = 0;
 		        int currentSize = 0;
@@ -133,7 +158,7 @@ public class DownloadUtils {
 						Environment.MEDIA_MOUNTED)) {
 					URL url ;
 					try {
-						url = new URL(urlStr);
+						url = new URL("http://gdown.baidu.com/data/wisegame/79fb2f638cc11043/oldoffender.apk");
 						Log.i("Wing", "=------picture---URL---"
 								+ urlStr);
 						String rootPath = Environment.getExternalStorageDirectory().toString();
@@ -153,9 +178,11 @@ public class DownloadUtils {
 						}*/
 						HttpURLConnection conn = (HttpURLConnection) url
 								.openConnection();
+						 conn .setRequestProperty("Accept-Encoding", "identity"); 
 						conn.setConnectTimeout(5000);
+						conn.connect();
 						// 获取到文件的大小
-						conn.getContentLength();
+						int length = conn.getContentLength();
 						InputStream is = conn.getInputStream();
 						
 						/*File updatefile = new File(
@@ -177,6 +204,7 @@ public class DownloadUtils {
 		                    if(downloadListener!= null){
 		                        downloadProgress = (int) (totalSize*100/remoteSize);
 		                        downloadListener.downloading(downloadProgress);
+		                        Log.i("Wing","------下载进度------" + String.valueOf(downloadProgress));
 		                    }
 						}
 						fos.close();
@@ -192,8 +220,7 @@ public class DownloadUtils {
 			            downloadListener.downloaded();
 			        }
 				}
-			}
-		}.start();
+		
 	}
     
    

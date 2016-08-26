@@ -423,15 +423,21 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		// TODO Auto-generated method stub
 		// if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
 		// mWebView.goBack(); return false; } else
-		LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
-		if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.getUrl().equals("http://m.qianft.com/")) {
-			exitApp();
-			return false;
-		} else {
-			if ( mWebView.canGoBack()) {
-				mWebView.loadUrl("javascript:window.history.back();");
+		/*if(mWebView == null){
+		      Log.d(TAG, "Webview is null on KeyCode: " + String.valueOf(keyCode));
+		    }*/
+		if (mWebView != null) {
+			LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
+			if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.getUrl().equals("http://m.qianft.com/")) {
+				exitApp();
+				return false;
 			} else {
-				mWebView.loadUrl("http://m.qianft.com/");
+				if (mWebView.canGoBack()) {
+					mWebView.loadUrl("javascript:window.history.back();");
+				} else {
+					mWebView.loadUrl("http://m.qianft.com/");
+				}
+				//return false;
 			}
 		}
 		return super.onKeyDown(keyCode, event);
@@ -1187,6 +1193,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					if (jsonObject.has("callback")) {
 						mCallback = jsonObject.getString("callback");
 					}
+					String phoneMode = android.os.Build.MODEL;
+					String systemSDK = android.os.Build.VERSION.SDK;
+					
 					returnJson = new JSONObject();
 					returnJson.put("errCode", "0000");
 					returnJson.put("errMsg", "执行成功");
@@ -1370,6 +1379,16 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void helloEventBus(String message) {
 		Log.d("Wing", "message:  " + message);
+		switch (message) {
+			case "hello":
+				break;
+			case "login_state":
+				break;
+			case "":
+				break;
+			default:
+				break;
+		}
 		if (message.equals("hello")) {
 			mWebView.loadUrl("http://m.qianft.com/WeiXin/Success");
 		} else if (message.equals("login_state")) {
@@ -1377,9 +1396,14 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					Constant.WECHAT_LOGIN_SP_NAME, "union_id");
 			mWebView.loadUrl("http://m.qianft.com/UserLogin/WeChatLogin?unionId=UNIONID"
 					.replace("UNIONID", uid));
-		} /*else if (message.contains("http://")) {
-			mWebView.loadUrl(message);
-		}*/
+		} else if (message.equals("")) {
+			mWebView.loadUrl("");
+		}
+	}
+	
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void weChat(Bundle bundle) {
+		LogUtil.d(TAG, "bundle::::  " + bundle.toString());
 	}
 	/**
 	 * 检查更新版本
@@ -1430,7 +1454,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			tv_UpdateContent_3.setText("3:" + updateContentDetail[2]);
 			ImageButton updateNow = (ImageButton) window.findViewById(R.id.update_now);
 			ImageButton updateAfter = (ImageButton) window.findViewById(R.id.update_after);
-
 			updateNow.setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
@@ -1492,7 +1515,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
     		setIntent(intent);
         	LogUtil.d(TAG, "intent:   " + intent);
     	}
-    	
     }
 
 }

@@ -26,6 +26,7 @@ public class GlobalProgressDialog extends Dialog {
 		customProgressDialog.setContentView(R.layout.global_progress_dialog);
 		customProgressDialog.getWindow().getAttributes().gravity = Gravity.CENTER;
 		customProgressDialog.setCancelable(true);
+		customProgressDialog.setCanceledOnTouchOutside(false);
 		
 		return customProgressDialog;
 	}

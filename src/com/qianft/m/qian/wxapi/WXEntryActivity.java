@@ -236,6 +236,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 					if (state.equals("wechat_sdk_demo_test")) {
 						String result = HttpUtils.postRequest(Util.SERVER_URL,
 								userInfoMap, WXEntryActivity.this);
+						
 						LogUtil.d("Wing", "--post commit---" + result);
 					}
 					Message msg = mHandler.obtainMessage();
@@ -249,7 +250,8 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 					bundle.putString("province", province);
 					bundle.putString("city", city);
 					bundle.putString("country", country);
-
+					
+					EventBus.getDefault().post(bundle);
 					msg.obj = bundle;
 					mHandler.sendMessage(msg);
 				} catch (ClientProtocolException e) {
