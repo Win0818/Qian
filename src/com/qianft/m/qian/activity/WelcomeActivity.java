@@ -14,6 +14,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.qianft.m.qian.BaseApplication;
 import com.qianft.m.qian.R;
 import com.qianft.m.qian.common.Constant;
 import com.qianft.m.qian.utils.MySharePreData;
@@ -74,8 +75,13 @@ public class WelcomeActivity extends Activity{
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					startActivity(new Intent(WelcomeActivity.this, 
-							MainActivity.class));
+					if (!BaseApplication.getInstance().getLockPatternUtils().savedPatternExists()) {
+						startActivity(new Intent(WelcomeActivity.this, 
+								MainActivity.class));
+					}else {
+						startActivity(new Intent(WelcomeActivity.this, 
+								UnlockGesturePasswordActivity.class));
+					}
 					finish();
 				}
 			}

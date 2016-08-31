@@ -79,6 +79,15 @@
     	<activity android:name=".activity.NavigationActivity"
     	    	  android:screenOrientation="portrait" >
     	</activity>
+    	 <activity
+            android:name=".activity.CreateGesturePasswordActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+    	 <activity
+            android:name=".activity.UnlockGesturePasswordActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+        
     	<service android:name=".service.AppUpgradeService"></service>
     </application>
 

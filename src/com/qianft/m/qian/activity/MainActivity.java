@@ -17,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -29,6 +30,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -72,6 +74,8 @@ import com.qianft.m.qian.utils.SharePopMenu.shareBottomClickListener;
 import com.qianft.m.qian.utils.StorageUtils;
 import com.qianft.m.qian.utils.Util;
 import com.qianft.m.qian.view.GlobalProgressDialog;
+import com.tencent.mm.sdk.constants.ConstantsAPI;
+import com.tencent.mm.sdk.modelbase.BaseResp;
 import com.tencent.mm.sdk.modelmsg.SendAuth;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
@@ -97,8 +101,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private ImageButton mRefreshBtn;
 	private LinearLayout mNoNetworkLinearLayout;
 	private boolean DEBUG = true;
-	private String mAddress = Constant.Address;
-	//private String mAddress = "file:///android_asset/html/index.html";
+	//private String mAddress = Constant.Address;
+	private String mAddress = "file:///android_asset/html/index.html";
 	//private String mAddress = "http://192.168.0.70:8088/Home/Index";
 	private String mShareUrl;
 	private String mTitle;
@@ -124,6 +128,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private int newVersionCode = 1;
 	private PushAgent mPushAgent;
 	private boolean pushFlag= true;
+	private String mAuthCallback = null;
+	private String mAuthCancel = null ;
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -170,7 +176,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		
 		setContentView(R.layout.activity_main);
 		mPushAgent = PushAgent.getInstance(this);
 		initView();
@@ -831,33 +836,33 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						
 						try {
 							jsonObject = new JSONObject(json);
-							String userid = jsonObject.getString("userId");
-							String postServerUrl = jsonObject.getString("postServerUrl");
-							String auth_Success_Url = jsonObject.getString("auth_Success_Url");
+							//String userid = jsonObject.getString("userId");
+							//String postServerUrl = jsonObject.getString("postServerUrl");
+							//String auth_Success_Url = jsonObject.getString("auth_Success_Url");
 							LogUtil.d(TAG, "jsonObject.has(callback) "  + jsonObject.has("callback"));
 							if (jsonObject.has("callback")) {
-								mCallback = jsonObject.getString("callback");
+								mAuthCallback = jsonObject.getString("callback");
 							}
 							LogUtil.d(TAG, "jsonObject.has(cancel): "   + jsonObject.has("cancel"));
 							if (jsonObject.has("cancel")) {
-								mCancel = jsonObject.getString("cancel");
+								mAuthCancel = jsonObject.getString("cancel");
 							}
-							LogUtil.d("Wing", "userid:   " + userid);
-							Util.SERVER_URL = postServerUrl;
-							Util.Auth_Success_Url = auth_Success_Url;
-							Util.USER_ID = userid;
+							//LogUtil.d("Wing", "userid:   " + userid);
+							//Util.SERVER_URL = postServerUrl;
+							//Util.Auth_Success_Url = auth_Success_Url;
+							//Util.USER_ID = userid;
 							loginWechat();
 							
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
 							returnJson.put("errMsg", "执行成功");
 
-							JSONObject jsonObject2 = new JSONObject();
-							jsonObject2.put("userId", userid);
-							jsonObject2.put("postServerUrl", postServerUrl);
-							jsonObject2.put("auth_Success_Url", auth_Success_Url);
+							//JSONObject jsonObject2 = new JSONObject();
+							//jsonObject2.put("userId", userid);
+							//jsonObject2.put("postServerUrl", postServerUrl);
+							//jsonObject2.put("auth_Success_Url", auth_Success_Url);
 							
-							returnJson.put("ref", jsonObject2);
+							//returnJson.put("ref", jsonObject2);
 							
 							//if (!TextUtils.isEmpty(mCallback)) {
 								//mWebView.loadUrl("javascript:" + mSuccess + "(" + result +")" );
@@ -1183,29 +1188,53 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}*/
 			
 			@JavascriptInterface
-			public void  getUserAPPInfo_android(String json) {
+			public void  getUserAPPInfo_android(final String json) {
 				
-				JSONObject jsonObject = null;
-				JSONObject returnJson = null;
-				String mCallback = null;
-				try {
-					jsonObject = new JSONObject(json);
-					if (jsonObject.has("callback")) {
-						mCallback = jsonObject.getString("callback");
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						JSONObject jsonObject = null;
+						JSONObject returnJson = null;
+						String mCallback = null;
+						try {
+							LogUtil.d("Wing", "json_info:  " + json);
+							jsonObject = new JSONObject(json);
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
+							String phoneMode = android.os.Build.MODEL;
+							String systemSDK = android.os.Build.VERSION.SDK;
+							
+							returnJson = new JSONObject();
+							returnJson.put("errCode", "0000"); 
+							returnJson.put("errMsg", "执行成功");
+							
+							JSONObject returnRefJson = new JSONObject();
+							returnRefJson.put("userVersionCode", Global.localVersionCode);
+							returnRefJson.put("userVersionName", Global.localVersionName);
+							returnJson.put("ref", returnRefJson);
+							String result = returnJson.toString();
+							mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+						
 					}
-					String phoneMode = android.os.Build.MODEL;
-					String systemSDK = android.os.Build.VERSION.SDK;
+				});
+			}
+			@JavascriptInterface
+			public void startGesturePasswordSetup_android() {
+				runOnUiThread(new Runnable() {
 					
-					returnJson = new JSONObject();
-					returnJson.put("errCode", "0000");
-					returnJson.put("errMsg", "执行成功");
-					returnJson.put("userVersionCode", Global.localVersionCode);
-					returnJson.put("userVersionName", Global.localVersionName);
-					String result = returnJson.toString();
-					mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+					@Override
+					public void run() {
+						try {
+							startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
+				});
 			}
 		};
 
@@ -1382,14 +1411,30 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		switch (message) {
 			case "hello":
 				break;
-			case "login_state":
+			case "auth_cancel":
+				JSONObject returnCancelJson = new JSONObject();
+				try {
+					returnCancelJson.put("errCode", "0000");
+					returnCancelJson.put("errMsg", "登录取消");
+					mWebView.loadUrl("javascript: " + mAuthCancel + "(" + returnCancelJson.toString() + ")");
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 				break;
-			case "":
+			case "auth_fail":
+				JSONObject returnFailJson = new JSONObject();
+				try {
+					returnFailJson.put("errCode", "0004");
+					returnFailJson.put("errMsg", "登录失败");
+					mWebView.loadUrl("javascript: " + mAuthCallback + "(" + returnFailJson.toString() + ")");
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 				break;
 			default:
 				break;
 		}
-		if (message.equals("hello")) {
+		/*if (message.equals("hello")) {
 			mWebView.loadUrl("http://m.qianft.com/WeiXin/Success");
 		} else if (message.equals("login_state")) {
 			String uid = MySharePreData.GetData(MainActivity.this,
@@ -1398,12 +1443,46 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					.replace("UNIONID", uid));
 		} else if (message.equals("")) {
 			mWebView.loadUrl("");
-		}
+		}*/
 	}
 	
+	/**
+	 * 微信授权
+	 * @param bundle
+	 */
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void weChat(Bundle bundle) {
-		LogUtil.d(TAG, "bundle::::  " + bundle.toString());
+		
+		if ((Global.RESP.errCode == BaseResp.ErrCode.ERR_OK) && 
+				(Global.RESP.getType() == ConstantsAPI.COMMAND_SENDAUTH)) {
+			JSONObject returnJson = new JSONObject();
+			
+			try {
+				if (Global.RESP.errCode == BaseResp.ErrCode.ERR_COMM);
+				returnJson.put("errCode", "0000");
+				returnJson.put("errMsg", "执行成功");
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			LogUtil.d(TAG, "bundle::::  " + bundle.toString());
+			JSONObject jsonRef = new JSONObject();
+			try {
+				jsonRef.put("openid", bundle.getString("openid"));
+				jsonRef.put("province", bundle.getString("province"));
+				jsonRef.put("unionid", bundle.getString("unionid"));
+				jsonRef.put("sex", bundle.getString("sex"));
+				jsonRef.put("city", bundle.getString("city"));
+				jsonRef.put("nickname", bundle.getString("nickname"));
+				jsonRef.put("country", bundle.getString("country"));
+				jsonRef.put("headimgurl", bundle.getString("headimgurl"));
+				returnJson.put("ref", jsonRef);
+				
+				mWebView.loadUrl("javascript: " + mAuthCallback + "(" + returnJson.toString() + ")");
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+		
 	}
 	/**
 	 * 检查更新版本
@@ -1508,6 +1587,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
         return error;  
     }
     
+    /*
+     * 推送Intent
+     * (non-Javadoc)
+     * @see android.app.Activity#onNewIntent(android.content.Intent)
+     */
     @Override
     protected void onNewIntent(Intent intent) {
     	super.onNewIntent(intent);

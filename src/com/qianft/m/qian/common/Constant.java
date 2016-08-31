@@ -42,6 +42,18 @@ public class Constant {
 	public static final String APP_SECRET = "bdb178785eb213a0729751fcd76afded";
 	
 	/**
+	 * QQ分享id 和 secret
+	 */
+	public static final String QQ_APP_ID = "1105582062";
+	public static final String QQ_APP_SECRET = "gyr8Wh1NkjKVGsvE";
+	
+	/**
+	 * 微博分享id 和 secret
+	 */
+	public static final String Weibo_APP_ID = "";
+	public static final String Weibo_APP_SECRET = "";
+	
+	/**
 	 * 
 	 */
 	public static final String SERVER1 = "http://192.168.0.70:8088/";// 本地服务器

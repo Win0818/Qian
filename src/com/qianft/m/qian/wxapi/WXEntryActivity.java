@@ -59,7 +59,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 				if (state.equals("login_state")) {
 					EventBus.getDefault().post("login_state");
 				} else if (state.equals("wechat_sdk_demo_test")) {
-					EventBus.getDefault().post("hello");
+					EventBus.getDefault().post(bundle2);
 				}
 				WXEntryActivity.this.finish();
 				break;
@@ -118,6 +118,7 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 		case BaseResp.ErrCode.ERR_USER_CANCEL:
 			if (resp.getType() == ConstantsAPI.COMMAND_SENDAUTH) {
 				Toast.makeText(getApplicationContext(), "登录取消", Toast.LENGTH_SHORT).show();
+				EventBus.getDefault().post("auth_cancel");
 				System.out.println("ERR_USER_CANCEL");
 			} else if (resp.getType() == ConstantsAPI.COMMAND_SENDMESSAGE_TO_WX) {
 				// 分享取消
@@ -134,6 +135,18 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 				// 分享拒绝
 				Toast.makeText(getApplicationContext(), "分享成功", Toast.LENGTH_SHORT).show();
 				System.out.println("ERR_USER_CANCEL");
+			}
+			this.finish();
+			break;
+		case BaseResp.ErrCode.ERR_COMM:
+			if (resp.getType() == ConstantsAPI.COMMAND_SENDAUTH) {
+				Toast.makeText(getApplicationContext(), "授权失败", Toast.LENGTH_SHORT).show();
+				EventBus.getDefault().post("auth_fail");
+				System.out.println("ERR_COMM");
+			} else if (resp.getType() == ConstantsAPI.COMMAND_SENDMESSAGE_TO_WX) {
+				// 分享拒绝
+				Toast.makeText(getApplicationContext(), "分享失败", Toast.LENGTH_SHORT).show();
+				System.out.println("ERR_COMM");
 			}
 			this.finish();
 			break;
@@ -233,12 +246,12 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 					userInfoMap.put("unionid", unionid);
 					userInfoMap.put("userid", userid);
 					
-					if (state.equals("wechat_sdk_demo_test")) {
+					/*if (state.equals("wechat_sdk_demo_test")) {
 						String result = HttpUtils.postRequest(Util.SERVER_URL,
 								userInfoMap, WXEntryActivity.this);
 						
 						LogUtil.d("Wing", "--post commit---" + result);
-					}
+					}*/
 					Message msg = mHandler.obtainMessage();
 					msg.what = Constant.RETURN_NICKNAME_UID;
 					Bundle bundle = new Bundle();
@@ -250,8 +263,6 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 					bundle.putString("province", province);
 					bundle.putString("city", city);
 					bundle.putString("country", country);
-					
-					EventBus.getDefault().post(bundle);
 					msg.obj = bundle;
 					mHandler.sendMessage(msg);
 				} catch (ClientProtocolException e) {

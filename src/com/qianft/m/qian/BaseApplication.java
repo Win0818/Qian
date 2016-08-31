@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import com.qianft.m.qian.activity.MainActivity;
 import com.qianft.m.qian.common.Global;
+import com.qianft.m.qian.view.LockPatternUtils;
 import com.umeng.common.message.Log;
 import com.umeng.message.PushAgent;
 import com.umeng.message.UTrack;
@@ -38,20 +39,32 @@ import com.umeng.message.entity.UMessage;
 
 public class BaseApplication extends Application{
 
+	private static BaseApplication mInstance;
+	private LockPatternUtils mLockPatternUtils;
 	private static final String TAG = BaseApplication.class.getName();
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		
+		mInstance = this;
 		initLocalVersion();
-
 		PushAgent mPushAgent = PushAgent.getInstance(this);
 		mPushAgent.setDebugMode(true);
 		mPushAgent.setNotificationClickHandler(notificationClickHandler);
 		mPushAgent.setMessageHandler(messageHandler);
 
+		mLockPatternUtils = new LockPatternUtils(this);
 
 		Log.d("Wing", "device----->>>>>" + getDeviceInfo(this));
 
+	}
+	
+	public static BaseApplication getInstance() {
+		return mInstance;
+	}
+	
+	public LockPatternUtils getLockPatternUtils() {
+		return mLockPatternUtils;
 	}
 	
 	public void initLocalVersion(){
