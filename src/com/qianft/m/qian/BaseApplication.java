@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.qianft.m.qian.activity.MainActivity;
+import com.qianft.m.qian.common.Constant;
 import com.qianft.m.qian.common.Global;
 import com.qianft.m.qian.view.LockPatternUtils;
 import com.umeng.common.message.Log;
@@ -35,6 +36,7 @@ import com.umeng.message.UTrack;
 import com.umeng.message.UmengMessageHandler;
 import com.umeng.message.UmengNotificationClickHandler;
 import com.umeng.message.entity.UMessage;
+import com.umeng.socialize.PlatformConfig;
 
 
 public class BaseApplication extends Application{
@@ -56,6 +58,13 @@ public class BaseApplication extends Application{
 		mLockPatternUtils = new LockPatternUtils(this);
 
 		Log.d("Wing", "device----->>>>>" + getDeviceInfo(this));
+		
+		 //微信 appid appsecret
+		PlatformConfig.setWeixin(Constant.APP_ID, Constant.APP_SECRET);
+		 //新浪微博 appkey appsecret
+		PlatformConfig.setSinaWeibo("3921700954","04b48b094faeb16683c32669824ebdad");
+		// QQ和Qzone appid appkey 
+		PlatformConfig.setQQZone(Constant.QQ_APP_ID, Constant.QQ_APP_SECRET); 
 
 	}
 	

@@ -59,4 +59,11 @@
 	        android:background="@drawable/selector_refresh_nonetwork"/>
         
     </LinearLayout>
+    
+    <Button
+       android:layout_width="wrap_content"
+	   android:layout_height="wrap_content"
+	   android:layout_alignParentLeft="true"
+	   android:onClick="umengShare"
+	   android:text="social share" />
 </RelativeLayout>

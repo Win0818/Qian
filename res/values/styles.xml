@@ -70,4 +70,6 @@
         <item name="android:background">@drawable/common_btn_red</item>
     </style>
     
+    <style name="Theme.UMDefault" parent="android:style/Theme.NoTitleBar"></style>
+    
 </resources>

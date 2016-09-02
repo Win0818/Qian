@@ -31,8 +31,9 @@ import com.tencent.mm.sdk.modelmsg.SendAuth.Resp;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.IWXAPIEventHandler;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.umeng.socialize.weixin.view.WXCallbackActivity;
 
-public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
+public class WXEntryActivity extends WXCallbackActivity implements IWXAPIEventHandler {
 	// IWXAPI 是第三方app和微信通信的openapi接口
 	private String TAG = "Wing";
 	private IWXAPI api;
@@ -153,13 +154,13 @@ public class WXEntryActivity extends Activity implements IWXAPIEventHandler {
 		}
 	}
 
-	@Override
+	/*@Override
 	protected void onNewIntent(Intent intent) {
 		super.onNewIntent(intent);
 		setIntent(intent);
 		api.handleIntent(intent, this);
 		finish();
-	}
+	}*/
 
 	/**
 	 * 获取openid accessToken值用于后期操作

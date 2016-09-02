@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -85,6 +86,11 @@ import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.umeng.analytics.MobclickAgent;
 import com.umeng.message.IUmengRegisterCallback;
 import com.umeng.message.PushAgent;
+import com.umeng.socialize.ShareAction;
+import com.umeng.socialize.UMShareAPI;
+import com.umeng.socialize.UMShareListener;
+import com.umeng.socialize.bean.SHARE_MEDIA;
+import com.umeng.socialize.media.UMImage;
 
 
 /**
@@ -177,12 +183,19 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
+		if(Build.VERSION.SDK_INT>=23){
+			String[] mPermissionList = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+					Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.CALL_PHONE,
+					Manifest.permission.READ_LOGS,Manifest.permission.READ_PHONE_STATE, 
+					Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.SET_DEBUG_APP,
+					Manifest.permission.SYSTEM_ALERT_WINDOW,Manifest.permission.GET_ACCOUNTS,
+					Manifest.permission.WRITE_APN_SETTINGS};
+            ActivityCompat.requestPermissions(this,mPermissionList,100);
+        }
 		mPushAgent = PushAgent.getInstance(this);
 		initView();
 		initData();
 	}
-	
-
 
 	private void initView() {
 		picture = (ImageView) findViewById(R.id.image_view);
@@ -200,20 +213,62 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		wxApi.registerApp(Constant.APP_ID);
 		mContext = this;
 		// 初始化弹出菜单
-		popMenu = new SharePopMenu(this);
+		//popMenu = new SharePopMenu(this);
 		/*
 		 * popMenu.addItem(new ShareObject(getResources().getString(
 		 * R.string.share_to_wechat_freind), R.drawable.share_to_freind));
 		 * popMenu.addItem(new ShareObject(getResources().getString(
 		 * R.string.share_to_wechat_circle), R.drawable.share_to_circle));
 		 */
-		popMenu.setShareBottomClickListener(this);
+		//popMenu.setShareBottomClickListener(this);
 	}
+	
+	public void umengShare(View view) {
+		final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
+                {
+                    SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
+                    SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE
+                };
+        new ShareAction(this).setDisplayList( displaylist )
+                .withText( "呵呵" )
+                .withTitle("title")
+                .withTargetUrl("http://www.baidu.com")
+                //.withMedia()
+                .setListenerList(umShareListener)
+                .open();
+	}
+	
+	 private UMShareListener umShareListener = new UMShareListener() {
+	        @Override
+	        public void onResult(SHARE_MEDIA platform) {
+	            Log.d("plat","platform"+platform);
+	            
+	            Toast.makeText(MainActivity.this, platform + " 分享成功啦", Toast.LENGTH_SHORT).show();
+	        }
+
+	        @Override
+	        public void onError(SHARE_MEDIA platform, Throwable t) {
+	            Toast.makeText(MainActivity.this,platform + " 分享失败啦", Toast.LENGTH_SHORT).show();
+	            if(t!=null){
+	                Log.d("throw","throw:"+t.getMessage());
+	            }
+	        }
+	        @Override
+	        public void onCancel(SHARE_MEDIA platform) {
+	            Toast.makeText(MainActivity.this,platform + " 分享取消了", Toast.LENGTH_SHORT).show();
+	        }
+	    };
+	    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        UMShareAPI.get( this ).onActivityResult(requestCode, resultCode, data);
+        Log.d("result","onActivityResult");
+    }
 
 	private void initData() {
 		EventBus.getDefault().register(this);
 		requestQueue = Volley.newRequestQueue(mContext);
-		
 		PushAgent mPushAgent = PushAgent.getInstance(this);
 		mPushAgent.enable(mRegisterCallback);
 		//mPushAgent.enable();
@@ -277,14 +332,21 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Override
 	public void shareCircle() {
 		Log.d("Wing", "SHARE_TO_FREIND_CIRCLE");
-		if (mShareUrl != null && mTitle != null && mDescription != null
+		/*if (mShareUrl != null && mTitle != null && mDescription != null
 				&& mImageUrl != null) {
 			share(Constant.SHARE_TO_FREIND_CIRCLE, mShareUrl, mTitle,
 					mDescription, mImageUrl);
 			LogUtil.d("Wing", "mShareUrl: " + mShareUrl + "mTitle: " + mTitle
 					+ "mDescription: " + mDescription + "mImageUrl: "
 					+ mImageUrl);
-		}
+		}*/
+		new ShareAction(this)
+		.setPlatform(SHARE_MEDIA.WEIXIN_CIRCLE)
+		.setCallback(umShareListener)
+		.withText("hello umeng video")
+		.withTargetUrl("http://www.baidu.com")
+		//.withMedia(image)
+		.share();
 	}
 	/**
 	 * 分享给微信好友
@@ -364,7 +426,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					mWebView.getSettings().setBlockNetworkImage(false);
 					super.onPageFinished(view, url);
 				}
-
 				@Override
 				@Deprecated
 				public void onReceivedError(WebView view, int errorCode,
@@ -373,12 +434,18 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					 * super.onReceivedError(view, errorCode, description,
 					 * failingUrl);
 					 */
-					view.stopLoading();
-					view.clearView();
+					if (view != null) {
+						view.stopLoading();
+						view.clearView();
+					}
 					LogUtil.d("Wing", "onReceivedError---errorCode---->>>>>>>"
 							+ errorCode);
-					mHandler.sendEmptyMessage(Constant.NO_NETWORK_HANDLER);
-					mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
+					if (mHandler != null) {
+						mHandler.sendEmptyMessage(Constant.NO_NETWORK_HANDLER);
+					}
+					if (mNoNetworkLinearLayout != null) {
+						mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
+					}
 					super.onReceivedError(view, errorCode, description,
 							failingUrl);
 				}
@@ -425,24 +492,20 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		// TODO Auto-generated method stub
-		// if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
-		// mWebView.goBack(); return false; } else
-		/*if(mWebView == null){
-		      Log.d(TAG, "Webview is null on KeyCode: " + String.valueOf(keyCode));
-		    }*/
-		if (mWebView != null) {
-			LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
-			if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.getUrl().equals("http://m.qianft.com/")) {
-				exitApp();
-				return false;
-			} else {
-				if (mWebView.canGoBack()) {
-					mWebView.loadUrl("javascript:window.history.back();");
+		if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_BACK)) {
+			if (mWebView != null) {
+				LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
+				if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.getUrl().equals("http://m.qianft.com/")) {
+					exitApp();
+					return false;
 				} else {
-					mWebView.loadUrl("http://m.qianft.com/");
+					if (mWebView.canGoBack()) {
+						mWebView.loadUrl("javascript:window.history.back();");
+					} else {
+						mWebView.loadUrl("http://m.qianft.com/");
+					}
+					//return false;
 				}
-				//return false;
 			}
 		}
 		return super.onKeyDown(keyCode, event);
@@ -602,14 +665,36 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			
 			@JavascriptInterface
-			public void share_To_Wechat_android(String webpageUrl,
-					String title, String description, String imageUrl) {
-				mTitle = title;
-				mShareUrl = webpageUrl;
-				mDescription = description;
-				mImageUrl = imageUrl;
-				popMenu.showAsDropDown(MainActivity.this
-						.findViewById(R.id.main_root));
+			public void share_To_Wechat_android(final String webpageUrl,
+					final String title, final String description, final String imageUrl) {
+				runOnUiThread(new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						mTitle = title;
+						mShareUrl = webpageUrl;
+						mDescription = description;
+						mImageUrl = imageUrl;
+						/*popMenu.showAsDropDown(MainActivity.this
+								.findViewById(R.id.main_root));*/
+						
+						final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
+				                {
+				                    SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
+				                    SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE
+				                };
+				        new ShareAction(MainActivity.this).setDisplayList( displaylist )
+				                .withText(description)
+				                .withTitle(title)
+				                .withTargetUrl(webpageUrl)
+				                .withMedia(new UMImage(MainActivity.this,
+				                        BitmapFactory.decodeResource(getResources(), R.drawable.app_icon)))
+				                .setListenerList(umShareListener)
+				                .open();
+					}
+				});
+				
 			}
 			
 			public void  share_To_Wechat_android(final String json) {
@@ -628,14 +713,29 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							mDescription = jsonObject.getString("desc");
 							mImageUrl = jsonObject.getString("imgUrl");
 							
+							
 							if (jsonObject.has("callback")) {
 								mCallback = jsonObject.getString("callback");
 							}
 							if (jsonObject.has("cancel")) {
 								mCancel = jsonObject.getString("cancel");
 							}
-							popMenu.showAsDropDown(MainActivity.this
-									.findViewById(R.id.main_root));
+							
+							final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
+					                {
+					                    SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
+					                    SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE
+					                };
+					        new ShareAction(MainActivity.this).setDisplayList( displaylist )
+					                .withText(mDescription)
+					                .withTitle(mTitle)
+					                .withTargetUrl(mShareUrl)
+					                .withMedia(new UMImage(MainActivity.this,
+					                        BitmapFactory.decodeResource(getResources(), R.drawable.app_icon)))
+					                .setListenerList(umShareListener)
+					                .open();
+							/*popMenu.showAsDropDown(MainActivity.this
+									.findViewById(R.id.main_root));*/
 							
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
@@ -746,7 +846,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					}
 				});
 			}
-
 			@JavascriptInterface
 			public void takePhoto_android(String path, String picFileName) {
 				takePhoto(path, picFileName);
@@ -772,7 +871,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
 							returnJson.put("errMsg", "执行成功");
-							
 
 							JSONObject jsonObject2 = new JSONObject();
 							jsonObject2.put("saveTargetDir", mSaveTargetDir);
@@ -830,7 +928,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					public void run() {
 						LogUtil.d(TAG, "wechat_Auth_Login_android  ------------------json"  + json);
 						String mCallback = null;
-						String mCancel = null ;
+						String mCancel = null;
 						JSONObject jsonObject = null;
 						JSONObject returnJson = null;
 						
@@ -987,36 +1085,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 								Toast.LENGTH_SHORT).show();
 					}
 				});
-			}
-
-			// 以json实现webview与js之间的数据交互
-			public String jsontohtml() {
-				JSONObject map;
-				JSONArray array = new JSONArray();
-				try {
-					map = new JSONObject();
-					map.put("name", "aaron");
-					map.put("age", 25);
-					map.put("address", "中国上海");
-					array.put(map);
-
-					map = new JSONObject();
-					map.put("name", "jacky");
-					map.put("age", 22);
-					map.put("address", "中国北京");
-					array.put(map);
-
-					map = new JSONObject();
-
-					map.put("name", "vans");
-					map.put("age", 26);
-					map.put("address", "中国深圳");
-					map.put("phone", "13888888888");
-					array.put(map);
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-				return array.toString();
 			}
 
 			/**
@@ -1236,6 +1304,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					}
 				});
 			}
+			
+			
 		};
 
 		return insertObj;

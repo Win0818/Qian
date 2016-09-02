@@ -3,6 +3,7 @@
 	<name>Qian</name>
 	<comment></comment>
 	<projects>
+		<project>social_sdk_library_project</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
