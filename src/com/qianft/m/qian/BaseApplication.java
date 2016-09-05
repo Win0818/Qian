@@ -61,7 +61,6 @@ public class BaseApplication extends Application{
             pinfo = this.getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_CONFIGURATIONS);
             Global.localVersionCode = pinfo.versionCode;
             Global.localVersionName = pinfo.versionName;
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -71,7 +70,6 @@ public class BaseApplication extends Application{
         @Override
         public void dealWithCustomMessage(final Context context, final UMessage msg) {
             new Handler().post(new Runnable() {
-                     
                 @Override
                 public void run() {
                         // TODO Auto-generated method stub
@@ -88,7 +86,6 @@ public class BaseApplication extends Application{
                 }
             });
         }
-         
         //自定义通知样式
        /* @Override
         public Notification getNotification(Context context,UMessage msg) {
@@ -113,7 +110,6 @@ public class BaseApplication extends Application{
                 }
         }*/
 	};
-
 	/**
 	 * 该Handler是在BroadcastReceiver中被调用，故
 	 * 如果需启动Activity，需添加Intent.FLAG_ACTIVITY_NEW_TASK
@@ -136,10 +132,7 @@ public class BaseApplication extends Application{
 	                Log.d(TAG, "Push_Url: --------->>>>>>>>>>>>" + push_url);
 	                startActivity(intent);
 	        }
-			
 	};
-
-
 	public static boolean checkPermission(Context context, String permission) {
 	    boolean result = false;
 	    if (Build.VERSION.SDK_INT >= 23) {

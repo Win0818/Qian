@@ -426,23 +426,24 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		/*if(mWebView == null){
 		      Log.d(TAG, "Webview is null on KeyCode: " + String.valueOf(keyCode));
 		    }*/
-		if (mWebView != null) {
-			LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
-			if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.getUrl().equals("http://m.qianft.com/")) {
-				exitApp();
-				return false;
-			} else {
-				if (mWebView.canGoBack()) {
-					mWebView.loadUrl("javascript:window.history.back();");
+		if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_BACK)){
+			if (mWebView != null) {
+				LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
+				if (mWebView.getUrl().equals("http://m.qianft.com/")) {
+					exitApp();
+					return false;
 				} else {
-					mWebView.loadUrl("http://m.qianft.com/");
+					if (mWebView.canGoBack()) {
+						mWebView.loadUrl("javascript:window.history.back();");
+					} else {
+						mWebView.loadUrl("http://m.qianft.com/");
+					}
+					//return false;
 				}
-				//return false;
 			}
 		}
 		return super.onKeyDown(keyCode, event);
 	}
-
 	/**
 	 * 连续两次点击Back键退出App
 	 */
