@@ -28,6 +28,4 @@ public class BaseActivity extends Activity{
 		ActivityCollector.removeActivity(this);
 	}
 	
-	
-	
 }

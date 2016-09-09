@@ -18,6 +18,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,8 +37,10 @@ public class CreateGesturePasswordActivity extends Activity implements
 	private Toast mToast;
 	private Stage mUiStage = Stage.Introduction;
 	private View mPreviewViews[][] = new View[3][3];
+	private boolean isFirstInput = true;
+	private ImageButton mBackImageBtn;
 	/**
-	 * The patten used during the help screen to show how to draw a pattern.
+	 * The pattern used during the help screen to show how to draw a pattern.
 	 */
 	private final List<LockPatternView.Cell> mAnimatePattern = new ArrayList<LockPatternView.Cell>();
 
@@ -99,7 +102,7 @@ public class CreateGesturePasswordActivity extends Activity implements
 	protected enum Stage {
 
 		Introduction(R.string.lockpattern_recording_intro_header,
-				LeftButtonMode.Cancel, RightButtonMode.ContinueDisabled,
+				LeftButtonMode.Retry, RightButtonMode.ContinueDisabled,
 				ID_EMPTY_MESSAGE, true),
 		HelpScreen(R.string.lockpattern_settings_help_how_to_record,
 				LeftButtonMode.Gone, RightButtonMode.Ok, ID_EMPTY_MESSAGE,
@@ -110,13 +113,13 @@ public class CreateGesturePasswordActivity extends Activity implements
 		FirstChoiceValid(R.string.lockpattern_pattern_entered_header,
 				LeftButtonMode.Retry, RightButtonMode.Continue,
 				ID_EMPTY_MESSAGE, false), 
-		NeedToConfirm(R.string.lockpattern_need_to_confirm, LeftButtonMode.Cancel,
+		NeedToConfirm(R.string.lockpattern_need_to_confirm, LeftButtonMode.Retry,
 				RightButtonMode.ConfirmDisabled, ID_EMPTY_MESSAGE, true), 
 		ConfirmWrong(R.string.lockpattern_need_to_unlock_wrong,
-				LeftButtonMode.Cancel, RightButtonMode.ConfirmDisabled,
+				LeftButtonMode.Retry, RightButtonMode.ConfirmDisabled,
 				ID_EMPTY_MESSAGE, true), 
 		ChoiceConfirmed(R.string.lockpattern_pattern_confirmed_header,
-				LeftButtonMode.Cancel, RightButtonMode.Confirm,
+				LeftButtonMode.Retry, RightButtonMode.Confirm,
 				ID_EMPTY_MESSAGE, false);
 
 		/**
@@ -172,13 +175,15 @@ public class CreateGesturePasswordActivity extends Activity implements
 		mLockPatternView = (LockPatternView) this
 				.findViewById(R.id.gesturepwd_create_lockview);
 		mHeaderText = (TextView) findViewById(R.id.gesturepwd_create_text);
+		mBackImageBtn = (ImageButton) findViewById(R.id.gesture_back_id);
+		mBackImageBtn.setOnClickListener(this);
 		mLockPatternView.setOnPatternListener(mChooseNewLockPatternListener);
 		//mLockPatternView.setTactileFeedbackEnabled(true);
 		mLockPatternView.setTactileFeedbackEnabled(false);
 
-		mFooterRightButton = (Button) this.findViewById(R.id.right_btn);
+		//mFooterRightButton = (Button) this.findViewById(R.id.right_btn);
 		mFooterLeftButton = (Button) this.findViewById(R.id.reset_btn);
-		mFooterRightButton.setOnClickListener(this);
+		//mFooterRightButton.setOnClickListener(this);
 		mFooterLeftButton.setOnClickListener(this);
 		initPreviewViews();
 		if (savedInstanceState == null) {
@@ -194,7 +199,6 @@ public class CreateGesturePasswordActivity extends Activity implements
 			}
 			updateStage(Stage.values()[savedInstanceState.getInt(KEY_UI_STAGE)]);
 		}
-
 	}
 
 	private void initPreviewViews() {
@@ -219,7 +223,6 @@ public class CreateGesturePasswordActivity extends Activity implements
 					+ ", cell.getColumn() = " + cell.getColumn());
 			mPreviewViews[cell.getRow()][cell.getColumn()]
 					.setBackgroundResource(R.drawable.gesture_create_grid_selected);
-
 		}
 	}
 
@@ -232,7 +235,6 @@ public class CreateGesturePasswordActivity extends Activity implements
 					LockPatternUtils.patternToString(mChosenPattern));
 		}
 	}
-
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) {
@@ -260,7 +262,7 @@ public class CreateGesturePasswordActivity extends Activity implements
 			mLockPatternView.removeCallbacks(mClearPatternRunnable);
 			patternInProgress();
 		}
-
+		
 		public void onPatternCleared() {
 			mLockPatternView.removeCallbacks(mClearPatternRunnable);
 		}
@@ -268,40 +270,47 @@ public class CreateGesturePasswordActivity extends Activity implements
 		public void onPatternDetected(List<LockPatternView.Cell> pattern) {
 			if (pattern == null)
 				return;
-			// Log.i("way", "result = " + pattern.toString());
-			if (mUiStage == Stage.NeedToConfirm
-					|| mUiStage == Stage.ConfirmWrong) {
-				if (mChosenPattern == null)
-					throw new IllegalStateException(
-							"null chosen pattern in stage 'need to confirm");
-				if (mChosenPattern.equals(pattern)) {
-					updateStage(Stage.ChoiceConfirmed);
+			 Log.i("Wing", "result = " + pattern.toString());
+			//if (isFirstInput) {
+				if (mUiStage == Stage.NeedToConfirm
+						|| mUiStage == Stage.ConfirmWrong) {
+					if (mChosenPattern == null)
+						throw new IllegalStateException(
+								"null chosen pattern in stage 'need to confirm");
+					if (mChosenPattern.equals(pattern)) {
+						updateStage(Stage.ChoiceConfirmed);
+					} else {
+						updateStage(Stage.ConfirmWrong);
+					}
+				} else if (mUiStage == Stage.Introduction
+						|| mUiStage == Stage.ChoiceTooShort ) {
+					if (pattern.size() < LockPatternUtils.MIN_LOCK_PATTERN_SIZE) {
+						updateStage(Stage.ChoiceTooShort);
+					} else /*if (isFirstInput)*/{
+						Log.i("Wing", "FirstChoiceValid result = " + pattern.toString());
+						mChosenPattern = new ArrayList<LockPatternView.Cell>(
+								pattern);
+						updateStage(Stage.FirstChoiceValid);
+					}
 				} else {
-					updateStage(Stage.ConfirmWrong);
+					throw new IllegalStateException("Unexpected stage " + mUiStage
+							+ " when " + "entering the pattern.");
 				}
-			} else if (mUiStage == Stage.Introduction
-					|| mUiStage == Stage.ChoiceTooShort) {
-				if (pattern.size() < LockPatternUtils.MIN_LOCK_PATTERN_SIZE) {
-					updateStage(Stage.ChoiceTooShort);
-				} else {
-					mChosenPattern = new ArrayList<LockPatternView.Cell>(
-							pattern);
-					updateStage(Stage.FirstChoiceValid);
-				}
-			} else {
-				throw new IllegalStateException("Unexpected stage " + mUiStage
-						+ " when " + "entering the pattern.");
-			}
+			//Log.i("Wing", "result = " + pattern.toString());
+			//}
+			
+			isFirstInput = false;
+			
 		}
 
 		public void onPatternCellAdded(List<Cell> pattern) {
-
+			Log.d("Wing", "onPatternCellAdded----->>>>>>>>>" + pattern);
 		}
 
 		private void patternInProgress() {
 			mHeaderText.setText(R.string.lockpattern_recording_inprogress);
 			mFooterLeftButton.setEnabled(false);
-			mFooterRightButton.setEnabled(false);
+			//mFooterRightButton.setEnabled(false);
 		}
 	};
 
@@ -322,8 +331,8 @@ public class CreateGesturePasswordActivity extends Activity implements
 			mFooterLeftButton.setEnabled(stage.leftMode.enabled);
 		}
 
-		mFooterRightButton.setText(stage.rightMode.text);
-		mFooterRightButton.setEnabled(stage.rightMode.enabled);
+		//mFooterRightButton.setText(stage.rightMode.text);
+		//mFooterRightButton.setEnabled(stage.rightMode.enabled);
 
 		// same for whether the patten is enabled
 		if (stage.patternEnabled) {
@@ -346,6 +355,13 @@ public class CreateGesturePasswordActivity extends Activity implements
 			postClearPatternRunnable();
 			break;
 		case FirstChoiceValid:
+			if (mUiStage != Stage.FirstChoiceValid) {
+				throw new IllegalStateException("expected ui stage "
+						+ Stage.FirstChoiceValid + " when button is "
+						+ RightButtonMode.Continue);
+			}
+			Log.d("Wing", "switch (mUiStage)---Continue-->>>>");
+			updateStage(Stage.NeedToConfirm);
 			break;
 		case NeedToConfirm:
 			mLockPatternView.clearPattern();
@@ -356,6 +372,7 @@ public class CreateGesturePasswordActivity extends Activity implements
 			postClearPatternRunnable();
 			break;
 		case ChoiceConfirmed:
+			saveChosenPatternAndFinish();
 			break;
 		}
 
@@ -371,28 +388,38 @@ public class CreateGesturePasswordActivity extends Activity implements
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
+		case R.id.gesture_back_id:
+			this.finish();
+			break;
 		case R.id.reset_btn:
 			if (mUiStage.leftMode == LeftButtonMode.Retry) {
+				for (int i = 0; i < mPreviewViews.length; i++) {
+					View[]  mPreviewViews2 = mPreviewViews[i];
+					for (int j = 0; j < mPreviewViews2.length; j++) {
+						mPreviewViews[i][j].setBackgroundResource(android.R.color.transparent);
+					}
+				}
 				mChosenPattern = null;
 				mLockPatternView.clearPattern();
 				updateStage(Stage.Introduction);
-			} else if (mUiStage.leftMode == LeftButtonMode.Cancel) {
+				//updatePreviewViews();
+				/*} else if (mUiStage.leftMode == LeftButtonMode.Cancel) {
 				// They are canceling the entire wizard
-				finish();
+				finish();*/
 			} else {
 				throw new IllegalStateException(
 						"left footer button pressed, but stage of " + mUiStage
 								+ " doesn't make sense");
 			}
-
 			break;
-		case R.id.right_btn:
+		/*case R.id.right_btn:
 			if (mUiStage.rightMode == RightButtonMode.Continue) {
 				if (mUiStage != Stage.FirstChoiceValid) {
 					throw new IllegalStateException("expected ui stage "
 							+ Stage.FirstChoiceValid + " when button is "
 							+ RightButtonMode.Continue);
 				}
+				Log.d("Wing", "right_btn---Continue-->>>>");
 				updateStage(Stage.NeedToConfirm);
 			} else if (mUiStage.rightMode == RightButtonMode.Confirm) {
 				if (mUiStage != Stage.ChoiceConfirmed) {
@@ -400,6 +427,7 @@ public class CreateGesturePasswordActivity extends Activity implements
 							+ Stage.ChoiceConfirmed + " when button is "
 							+ RightButtonMode.Confirm);
 				}
+				Log.d("Wing", "right_btn---Confirm-->>>>");
 				saveChosenPatternAndFinish();
 			} else if (mUiStage.rightMode == RightButtonMode.Ok) {
 				if (mUiStage != Stage.HelpScreen) {
@@ -407,11 +435,12 @@ public class CreateGesturePasswordActivity extends Activity implements
 							"Help screen is only mode with ok button, but "
 									+ "stage is " + mUiStage);
 				}
+				Log.d("Wing", "right_btn---Ok-->>>>");
 				mLockPatternView.clearPattern();
 				mLockPatternView.setDisplayMode(DisplayMode.Correct);
 				updateStage(Stage.Introduction);
 			}
-			break;
+			break;*/
 		}
 	}
 

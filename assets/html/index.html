@@ -131,7 +131,21 @@
 		window.jsObj.startGesturePasswordSetup_android();
 
 	}
- 	
+	function isSettingGesturePSW_js() {
+		var json  = "{'callback':'result_s'}";
+		 window.jsObj.isSettingGesturePSW_android(json);
+	}
+	function result_s(json) {
+		var obj = eval(json);
+		alert("result: " + json.is_setting_gesture_password);
+	}
+	function ChangeGesturePSW_js() {
+		 window.jsObj.changeGesturePassword_android();
+	}
+
+	function getSumValue() {
+		return "12345678";
+	}
 </script>  
 </head>   
   
@@ -142,14 +156,13 @@ hello
 <br>  
 <input type="button" value="分享" onclick="showHtmlcallJava()" /> 
 <br>  
-<br>  
 <input type="button" value="授权登录" onclick="wechat_Auth_Login_js()" />   
 <br> 
 <input type="file" accept="image/*" />  
 <img src="/storage/emulated/0/qianfutong_2.png" width="50" height="50" />
 <p> 
    <label>请选择一个图像文件：</label> 
-   <input type="file" id="file_input" /> 
+   <input type="file" id="file_input" value="打开文件"/> 
 </p>  
 <div id="result"></div> 
 <br> 
@@ -164,12 +177,10 @@ hello
 <input type="button" value="AndroidcallHtml2" onclick="window.jsObj.JavacallHtml2()" />  
 
 <br>
-<div id="output" >userinfo: </div><br/><br/> 
+<div id="output" >userinfo: </div><br/>
  <input type="submit" value="request: " onclick="window.jsObj.clickOnAndroid()"/>
- 
 <br>
-<input type="button" value="打开摄像头" onclick="takePhoto()" />  
-<br>  
+<input type="button" value="打开摄像头" onclick="takePhoto()" />   
 <br> 
 <input type="button" value="下载图片" onclick="starVideoPlayActivity_js()" />  
 
@@ -177,6 +188,9 @@ hello
 <input type="button" value="CallAndroidAppInfo" onclick="callAndroid_js_appinfo()" />
 <br>
 <input type="button" value="设置手势解锁" onclick="startGesturePasswordSetup_js_()" />
+<input type="button" value="是否已经设置手势解锁" onclick="isSettingGesturePSW_js()" />
+<br>
+<input type="button" value="更改手势解锁" onclick="ChangeGesturePSW_js()" />
 </body>  
 </html>  
 

@@ -43,6 +43,7 @@ import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -63,6 +64,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.qianft.m.qian.BaseApplication;
 import com.qianft.m.qian.R;
 import com.qianft.m.qian.common.Constant;
 import com.qianft.m.qian.common.Global;
@@ -95,9 +97,7 @@ import com.umeng.socialize.media.UMImage;
 
 /**
  * 
- * @author Administrator 只要在网站的目录下配置一个扩展名为： .appcache 的 Manifest 文件，注明哪些文件需缓存，
- *         哪些文件必须经过网络去加载，然后在 <html> 标签中加入 <html manifest="demo.appcache">
- *         即可完成缓存的实现。
+ * @author 
  */
 public class MainActivity extends BaseActivity implements OnClickListener,
 		shareBottomClickListener {
@@ -136,6 +136,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private boolean pushFlag= true;
 	private String mAuthCallback = null;
 	private String mAuthCancel = null ;
+	private ValueCallback<Uri> mUploadMessage;
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -242,20 +243,19 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	        @Override
 	        public void onResult(SHARE_MEDIA platform) {
 	            Log.d("plat","platform"+platform);
-	            
-	            Toast.makeText(MainActivity.this, platform + " 分享成功啦", Toast.LENGTH_SHORT).show();
+	            Toast.makeText(MainActivity.this, platform + " 分享成功", Toast.LENGTH_SHORT).show();
 	        }
 
 	        @Override
 	        public void onError(SHARE_MEDIA platform, Throwable t) {
-	            Toast.makeText(MainActivity.this,platform + " 分享失败啦", Toast.LENGTH_SHORT).show();
+	            Toast.makeText(MainActivity.this,platform + " 分享失败", Toast.LENGTH_SHORT).show();
 	            if(t!=null){
 	                Log.d("throw","throw:"+t.getMessage());
 	            }
 	        }
 	        @Override
 	        public void onCancel(SHARE_MEDIA platform) {
-	            Toast.makeText(MainActivity.this,platform + " 分享取消了", Toast.LENGTH_SHORT).show();
+	            Toast.makeText(MainActivity.this,platform + " 分享取消", Toast.LENGTH_SHORT).show();
 	        }
 	    };
 	    
@@ -264,6 +264,15 @@ public class MainActivity extends BaseActivity implements OnClickListener,
         super.onActivityResult(requestCode, resultCode, data);
         UMShareAPI.get( this ).onActivityResult(requestCode, resultCode, data);
         Log.d("result","onActivityResult");
+        
+        if (requestCode == 0) {
+			if (null == mUploadMessage){
+				return;
+			}
+			Uri result = data == null || resultCode != RESULT_OK ? null : data.getData();
+			mUploadMessage.onReceiveValue(result);
+			mUploadMessage = null;
+		}
     }
 
 	private void initData() {
@@ -313,16 +322,16 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case R.id.refresh_btn:
-			if (!Util.isNetWorkConnected(this)) {
-				mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
-			} else {
-				mNoNetworkLinearLayout.setVisibility(View.INVISIBLE);
-				setWebView();
-			}
-			break;
-		default:
-			break;
+			case R.id.refresh_btn:
+				if (!Util.isNetWorkConnected(this)) {
+					mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
+				} else {
+					mNoNetworkLinearLayout.setVisibility(View.INVISIBLE);
+					setWebView();
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -383,7 +392,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			 * "Saving passwords in WebView will not be supported in future versions"
 			 * }
 			 */
-			mWebView.addJavascriptInterface(getHtmlObject(), "jsObj");
+			mWebView.addJavascriptInterface(/*getHtmlObject()*/new getHtmlObject(), "jsObj");
 			mWebView.loadUrl(mAddress);
 			mWebView.setOnKeyListener(new OnKeyListener() {
 				@Override
@@ -475,6 +484,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				@Override
 				public boolean onJsAlert(WebView view, String url,
 						String message, JsResult result) {
+					Log.d(TAG, "onJsAlert message: " + message);
 					return super.onJsAlert(view, url, message, result);
 				}
 
@@ -483,11 +493,32 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						String message, JsResult result) {
 					return super.onJsConfirm(view, url, message, result);
 				}
+				
+				@SuppressWarnings("unused")
+				public void openFileChooser(ValueCallback<Uri> uploadMsg, String AcceptType, String capture) {
+					this.openFileChooser(uploadMsg);
+				}
+
+				@SuppressWarnings("unused")
+				public void openFileChooser(ValueCallback<Uri> uploadMsg, String AcceptType) {
+					this.openFileChooser(uploadMsg);
+				}
+
+				public void openFileChooser(ValueCallback<Uri> uploadMsg) {
+					mUploadMessage = uploadMsg;
+					pickFile();
+				}
 			});
 
 		} catch (Exception e) {
 			return;
 		}
+	}
+	
+	public void pickFile() {
+		Intent chooserIntent = new Intent(Intent.ACTION_GET_CONTENT);
+		chooserIntent.setType("image/*");
+		startActivityForResult(chooserIntent, 0);
 	}
 
 	@Override
@@ -605,12 +636,22 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	 * 
 	 * @return
 	 */
-	private Object getHtmlObject() {
+	 private class getHtmlObject {
+		 protected Context ctx;
+		 protected WebView vw;
+		 
+		 public getHtmlObject() {
+			 
+		 }
+		 public getHtmlObject(Context context, WebView webview) {
+			 this.ctx = context;
+			 this.vw = webview;
+			 
+		 }
 
-		Object insertObj = new Object() {
+		//Object insertObj = new Object() {
 			@JavascriptInterface
 			public void Js_Invoke_Android_Main_Interface(String functionName, String json) {
-				
 				LogUtil.d("Wing", "HtmlcallAndroid---------->>>>>>>>>>>>>>" +functionName + "-------" +  json);
 				JSONObject jsonObject = null;
 				JSONObject returnJson = null;
@@ -1305,10 +1346,63 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				});
 			}
 			
+			@JavascriptInterface
+			public void isSettingGesturePSW_android(final String json) {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						JSONObject jsonObject = null;
+						JSONObject returnJson = null;
+						String mCallback = null;
+						try {
+							jsonObject = new JSONObject(json);
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
+							returnJson = new JSONObject();
+							if (BaseApplication.getInstance().getLockPatternUtils().savedPatternExists()) {
+								returnJson.put("is_setting_gesture_password", true);
+							} else {
+								returnJson.put("is_setting_gesture_password", false);
+							}
+							Log.d("Wing", "is_setting_gesture_password:  " + returnJson.toString());
+							mWebView.loadUrl("javascript: " + mCallback + "(" + returnJson.toString() + ")");
+						} catch (Exception e) {
+							e.printStackTrace();   
+						}
+					}
+				});
+			}
 			
-		};
-
-		return insertObj;
+			@JavascriptInterface
+			public void changeGesturePassword_android() {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							BaseApplication.getInstance().getLockPatternUtils().clearLock();
+							startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+			
+			private Map<String,String> valueMap = new HashMap<String, String>();  
+			
+			@JavascriptInterface
+			public String set(String key, String value) {  
+			        valueMap.put(key, value);  
+			        return "";  
+		  
+		    }  
+			
+			@JavascriptInterface
+		    public String get(String key){  
+		        return valueMap.get(key);  
+		    }
+		//return insertObj;
 	}
 
 	// 开始网页加载进度条
@@ -1316,7 +1410,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		if (mGlobalProgressDialog == null) {
 			mGlobalProgressDialog = GlobalProgressDialog.createDialog(this);
 		}
-		mGlobalProgressDialog.show();
+		mGlobalProgressDialog.show();  
 	}
 
 	// 停止网页加载进度条
@@ -1670,5 +1764,44 @@ public class MainActivity extends BaseActivity implements OnClickListener,
         	LogUtil.d(TAG, "intent:   " + intent);
     	}
     }
+    
+    @SuppressLint("NewApi") 
+    private void testEvaluateJavascript(WebView webview) {
+    	webview.evaluateJavascript("getSumValue()", new ValueCallback<String>() {
+			
+			@Override
+			public void onReceiveValue(String value) {
+				Log.i(TAG, "onReceiveValue value=   " + value);
+			}
+		});
+    }
+    
+   /* private boolean isMapPage(){  
+        js.set(JS_KEY, "-1");  
+      
+        mWebView.loadUrl("javascript:"  
+             +"if(window.jsinterface){"  
+             +"    if(window.gnav){" // Your conditions  
+             +"        window.jsinterface.set('"+JS_KEY+"','1');"  
+             +"    }else{"  
+             +"        window.jsinterface.set('"+JS_KEY+"','0');"  
+             +"    }"  
+             +"}"  
+             );  
+      
+    // Sleep moment to let JS finish. Otherwise js.get() run first  
+    try{  
+        Thread.sleep(200);  
+    }catch(InterruptedException ex){  
+         // Ignore  
+    }  
+      
+    	String v = js.get(JS_KEY);  
+    	System.out.println("isMapPage: getValue: value="+v);  
+	    if("1".equals(v)){  
+	        return true;  
+	    }  
+    	return false;  
+    } */ 
 
 }

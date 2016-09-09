@@ -16,9 +16,9 @@ import android.os.FileObserver;
 import android.util.Log;
 
 /**
- * 图案解锁加密、解密工具类
- * 
- * @author way
+ * 手势解锁
+ *@author Wuyong
+ *@since 
  * 
  */
 public class LockPatternUtils {

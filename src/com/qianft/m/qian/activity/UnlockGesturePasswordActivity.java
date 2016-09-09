@@ -15,19 +15,22 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.view.Gravity;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class UnlockGesturePasswordActivity extends Activity {
+public class UnlockGesturePasswordActivity extends Activity implements OnClickListener{
 	private LockPatternView mLockPatternView;
 	private int mFailedPatternAttemptsSinceLastTimeout = 0;
 	private CountDownTimer mCountdownTimer = null;
 	private Handler mHandler = new Handler();
 	private TextView mHeadTextView;
 	private Animation mShakeAnim;
+	private TextView mForgetPassword;
 
 	private Toast mToast;
 
@@ -53,6 +56,8 @@ public class UnlockGesturePasswordActivity extends Activity {
 		//mLockPatternView.setTactileFeedbackEnabled(true);
 		mLockPatternView.setTactileFeedbackEnabled(false);
 		mHeadTextView = (TextView) findViewById(R.id.gesturepwd_unlock_text);
+		mForgetPassword = (TextView) findViewById(R.id.gesturepwd_unlock_forget);
+		mForgetPassword.setOnClickListener(this);
 		mShakeAnim = AnimationUtils.loadAnimation(this, R.anim.shake_x);
 	}
 
@@ -77,7 +82,19 @@ public class UnlockGesturePasswordActivity extends Activity {
 			mLockPatternView.clearPattern();
 		}
 	};
-
+	
+	public void onClick(View v) {
+		switch (v.getId()) {
+		case R.id.gesturepwd_unlock_forget:
+			 Toast.makeText(UnlockGesturePasswordActivity.this, "forget password", Toast.LENGTH_LONG).show();
+			 Intent intent = new Intent(UnlockGesturePasswordActivity.this, MainActivity.class);
+			 startActivity(intent);
+			break;
+		default:
+			break;
+		}
+		
+	}
 	protected LockPatternView.OnPatternListener mChooseNewLockPatternListener = new LockPatternView.OnPatternListener() {
 
 		public void onPatternStart() {
@@ -110,7 +127,7 @@ public class UnlockGesturePasswordActivity extends Activity {
 							- mFailedPatternAttemptsSinceLastTimeout;
 					if (retry >= 0) {
 						if (retry == 0)
-							showToast("您已5次输错密码，请30秒后再试");
+							showToast(getResources().getString(R.string.lockpattern_input_wrong_five_times));
 						mHeadTextView.setText("密码错误，还可以再输入" + retry + "次");
 						mHeadTextView.setTextColor(Color.RED);
 						mHeadTextView.startAnimation(mShakeAnim);

@@ -34,7 +34,6 @@ import android.view.accessibility.AccessibilityEvent;
  * Is also capable of displaying a static pattern in "in progress", "wrong" or
  * "correct" states.
  * 
- * @author way
  */
 public class LockPatternView extends View {
 	private static final String TAG = "LockPatternView";
@@ -96,6 +95,7 @@ public class LockPatternView extends View {
 	private float mSquareHeight;
 
 	private Bitmap mBitmapCircleDefault;
+	private Bitmap mBitmapCircleOutRed;
 	private Bitmap mBitmapCircleGreen;
 	private Bitmap mBitmapCircleRed;
 
@@ -250,7 +250,7 @@ public class LockPatternView extends View {
 
 		mPathPaint.setAntiAlias(true);
 		mPathPaint.setDither(true);
-		mPathPaint.setColor(Color.GRAY); // TODO this should be from the style
+		mPathPaint.setColor(getResources().getColor(R.color.gesture_line_true)); // TODO this should be from the style
 		mPathPaint.setAlpha(mStrokeAlpha);
 		mPathPaint.setStyle(Paint.Style.STROKE);
 		mPathPaint.setStrokeJoin(Paint.Join.ROUND);
@@ -259,8 +259,9 @@ public class LockPatternView extends View {
 		mBitmapCircleDefault = getBitmapFor(R.drawable.gesture_pattern_item_bg);
 		mBitmapCircleGreen = getBitmapFor(R.drawable.gesture_pattern_selected);
 		mBitmapCircleRed = getBitmapFor(R.drawable.gesture_pattern_selected_wrong);
+		mBitmapCircleOutRed = getBitmapFor(R.drawable.gesture_pattern_item_wrong_bg);
 		// bitmaps have the size of the largest bitmap in this group
-		final Bitmap bitmaps[] = { mBitmapCircleDefault, mBitmapCircleGreen,
+		final Bitmap bitmaps[] = { mBitmapCircleDefault, mBitmapCircleOutRed, mBitmapCircleGreen,
 				mBitmapCircleRed };
 		for (Bitmap bitmap : bitmaps) {
 			mBitmapWidth = Math.max(mBitmapWidth, bitmap.getWidth());
@@ -899,7 +900,7 @@ public class LockPatternView extends View {
 		final float squareWidth = mSquareWidth;
 		final float squareHeight = mSquareHeight;
 
-		float radius = (squareWidth * mDiameterFactor * 0.5f);
+		float radius = (squareWidth * mDiameterFactor * 0.1f);
 		mPathPaint.setStrokeWidth(radius);
 
 		final Path currentPath = mCurrentPath;
@@ -948,9 +949,9 @@ public class LockPatternView extends View {
 			}
 			// chang the line color in different DisplayMode
 			if (mPatternDisplayMode == DisplayMode.Wrong)
-				mPathPaint.setColor(Color.RED);
+				mPathPaint.setColor(getResources().getColor(R.color.gesture_line_false));
 			else
-				mPathPaint.setColor(Color.GRAY);
+				mPathPaint.setColor(getResources().getColor(R.color.gesture_line_true));
 			canvas.drawPath(currentPath, mPathPaint);
 		}
 
@@ -994,7 +995,7 @@ public class LockPatternView extends View {
 			innerCircle = mBitmapCircleGreen;
 		} else if (mPatternDisplayMode == DisplayMode.Wrong) {
 			// the pattern is wrong
-			outerCircle = mBitmapCircleDefault;
+			outerCircle = mBitmapCircleOutRed;
 			innerCircle = mBitmapCircleRed;
 		} else if (mPatternDisplayMode == DisplayMode.Correct
 				|| mPatternDisplayMode == DisplayMode.Animate) {
