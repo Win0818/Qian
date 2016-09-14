@@ -1,0 +1,117 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">  
+<!-- saved from url=(0032)http://localhost:8080/jsandroid/ -->  
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=gb2312">  
+  
+<meta http-equiv="Expires" content="0">  
+<meta http-equiv="Pragma" content="no-cache">  
+<meta http-equiv="Cache-Control" content="no-store,no-cache">   
+<meta name="Handheldfriendly" content="true">  
+<meta name="viewport" content="width=100%; initial-scale=1.0; user-scalable=yes">  
+<meta name="robots" content="all">  
+<meta name="keywords" contect="doodle, mobile, doodlemobile, game, games">  
+<meta name="description" content="Make People's Mobile Life More Connected Through Games.">  
+  
+<title>jsandroid_test</title>  
+  
+<script type="text/javascript" language="javascript">   
+      
+    function showHtmlcallJava(){  
+        var str = window.jsObj.HtmlcallJava();  
+        //alert(str);  
+    }  
+      
+    function showHtmlcallJava2(){  
+        var str = window.jsObj.HtmlcallJava2(" blog");  
+        alert(str);  
+    }  
+      
+    function showFromHtml(){  
+        document.getElementById("id_input").value = "Java call Html";  
+    }  
+      
+    function showFromHtml2( param ){  
+        document.getElementById("id_input2").value = "Java call Html : " + param;   
+    } 
+	//在android代码中调用的方法
+	 function showInfoFromJava(msg, uid, openid){
+		alert("来自客户端的信息："+msg + " uid: " + uid + " openid: "+ openid);
+	  }
+
+	  function showInfoFromJava2(msg1, msg2){
+        alert("来自客户端的信息："+msg1 + "   msg2: " + msg2);
+    }
+
+	function alertMessage(message) {
+        alert(message)
+    }
+
+	 /* This function is invoked by the activity */ 
+	function wave(jsonText) { 
+		document.getElementById("output").innerHTML="userinfo："+jsonText.name; 
+		alert("2"); 
+	} 
+
+	function takePhoto(){
+		var path = "Qianft";
+		var picName = "wwwww";
+        window.jsObj.takePhoto_android("Qianft", "wwwww");  
+        alert("123");  
+    }
+	//var imageUrl = "";
+	//var savePathDir  = "";
+	//var picFileName = "";
+	//window.jsObj.downloadPicture(imageUrl, savePathDir, picFileName);
+	function starVideoPlayActivity_js() {
+		var url = "file:///android_asset/html/index2.html";
+		window.jsObj.starVideoPlayActivity_android(url);
+	}
+	
+</script>  
+</head>   
+  
+<body>  
+  
+hello
+  
+<br>  
+<br>  
+<br>  
+  
+<input type="button" value="授权登录" onclick="showHtmlcallJava()" />  
+<br>
+<br> 
+<br> 
+<input type="button" value="微信登录" onclick="showHtmlcallJava2()" />  
+  
+<br>  
+<br>  
+<br>  
+<br>  
+  
+<input id="id_input" style="width: 90%" type="text" value="null" />  
+<br>  
+<input type="button" value="AndroidcallHtml" onclick="window.jsObj.JavacallHtml()" />  
+  
+<br>  
+<br>  
+<br>  
+  
+<input id="id_input2" style="width: 90%" type="text" value="null" />  
+<br>  
+<input type="button" value="AndroidcallHtml2" onclick="window.jsObj.JavacallHtml2()" />  
+<br>  
+<br> 
+<br>
+<div id="output" >userinfo: </div><br/><br/> 
+ <input type="submit" value="request: " onclick="window.jsObj.clickOnAndroid()"/>
+<br>  
+<br> 
+<br>
+<input type="button" value="打开摄像头" onclick="takePhoto()" />  
+<br>  
+<br> 
+<input type="button" value="下载图片" onclick="starVideoPlayActivity_js()" />  
+</body>  
+</html>  
+

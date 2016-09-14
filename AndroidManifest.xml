@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.qianft.m.qian"
-    android:versionCode="20160815"
+    android:versionCode="20160816"
     android:versionName="1.3" >
 
     <uses-sdk
@@ -121,6 +121,9 @@
 	    	android:name="com.tencent.connect.common.AssistActivity"
 		    android:screenOrientation="portrait"
 		    android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+		<activity android:name="com.qianft.m.qian.activity.TestActivity"
+    	    	  android:screenOrientation="portrait">
+    	</activity>
     	<service android:name=".service.AppUpgradeService"></service>
     </application>
 

@@ -106,15 +106,14 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private WebView mWebView;
 	private ImageButton mRefreshBtn;
 	private LinearLayout mNoNetworkLinearLayout;
-	private boolean DEBUG = true;
 	//private String mAddress = Constant.Address;
-	private String mAddress = "file:///android_asset/html/index.html";
-	//private String mAddress = "http://192.168.0.70:8088/Home/Index";
+	//private String mAddress = "file:///android_asset/html/index.html";
+	private String mAddress = "http://192.168.0.88:8011/Home/Index";
+	private boolean DEBUG = true;
 	private String mShareUrl;
 	private String mTitle;
 	private Bitmap mIcom;
 	private long exitTime = 0;
-	private String mNowUrl = "";//"http://m.qianft.com/";
 	private IWXAPI wxApi;
 	private GlobalProgressDialog mGlobalProgressDialog;
 	private SharePopMenu popMenu;
@@ -182,7 +181,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		//requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
 		if(Build.VERSION.SDK_INT>=23){
 			String[] mPermissionList = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
@@ -225,7 +224,10 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	}
 	
 	public void umengShare(View view) {
-		final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
+		
+		testEvaluateJavascript(mWebView);
+		
+		/*final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
                 {
                     SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
                     SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE
@@ -236,7 +238,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
                 .withTargetUrl("http://www.baidu.com")
                 //.withMedia()
                 .setListenerList(umShareListener)
-                .open();
+                .open();*/
+		
+		Intent i = new Intent(MainActivity.this, TestActivity.class);
+		startActivity(i);
+		
 	}
 	
 	 private UMShareListener umShareListener = new UMShareListener() {
@@ -380,7 +386,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			webSettings.setJavaScriptEnabled(true);
 			webSettings.setDefaultTextEncodingName("utf-8");
 			webSettings.setLoadWithOverviewMode(true);
-			webSettings.setAllowFileAccess(false);
+			//webSettings.setAllowFileAccess(false);
 			webSettings.setUseWideViewPort(false);
 			webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 			webSettings.setBlockNetworkImage(true);
@@ -392,12 +398,13 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			 * "Saving passwords in WebView will not be supported in future versions"
 			 * }
 			 */
+			Log.i(TAG, "MainActivity ----->>>>>setWebview");
 			mWebView.addJavascriptInterface(/*getHtmlObject()*/new getHtmlObject(), "jsObj");
 			mWebView.loadUrl(mAddress);
 			mWebView.setOnKeyListener(new OnKeyListener() {
 				@Override
 				public boolean onKey(View v, int keyCode, KeyEvent event) {
-					if (keyCode == KeyEvent.KEYCODE_BACK && mNowUrl != null
+					if (keyCode == KeyEvent.KEYCODE_BACK 
 							&& mWebView.getUrl().equals("http://m.qianft.com/")) {
 						return false;
 					} else if (keyCode == KeyEvent.KEYCODE_BACK
@@ -413,9 +420,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				@Override
 				public boolean shouldOverrideUrlLoading(WebView view, String url) {
 					if (DEBUG)
-						Log.e("Wing", "..shouldOverrideUrlLoading.. url=" + url);
-					mNowUrl = url;
-					Log.e("Wing", "..mNowUrl =" + mNowUrl);
+						Log.e("Wing", "MainActivity..shouldOverrideUrlLoading..  url=" + url);
 					view.loadUrl(url);
 					return true;
 				}
@@ -636,7 +641,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	 * 
 	 * @return
 	 */
-	 private class getHtmlObject {
+	 public class getHtmlObject {
 		 protected Context ctx;
 		 protected WebView vw;
 		 
@@ -664,9 +669,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					e1.printStackTrace();
 				}
 				switch (functionName) {
-						case "share_To_Wechat_android":
+						/*case "share_To_Wechat_android":
 							share_To_Wechat_android(json);
-							break;
+							break;*/
 						case "loginWechat_android":
 							loginWechat_android(json);
 							break;
@@ -689,6 +694,10 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						case "clearUserInfo_android":
 							clearUserInfo_android(json);
 						   break;
+						case "startGesturePasswordSetup_android":
+							startGesturePasswordSetup_android(json);
+						   break;
+						   
 						default:
 							try {
 								returnJson.put("errorCode", "0002");
@@ -1331,10 +1340,22 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					}
 				});
 			}
-			@JavascriptInterface
 			public void startGesturePasswordSetup_android() {
 				runOnUiThread(new Runnable() {
-					
+					@Override
+					public void run() {
+						try {
+							startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
+				});
+			}
+			
+			@JavascriptInterface
+			public void startGesturePasswordSetup_android(final String json) {
+				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
 						try {
@@ -1421,22 +1442,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			mGlobalProgressDialog = null;
 		}
-	}
-
-	public void sendInfoToJs(View view) {
-		String msg1 = ((EditText) findViewById(R.id.input_et)).getText()
-				.toString();
-		String msg2 = "I am wuyong";
-		// 调用js中的函数：showInfoFromJava(msg)
-		String openId = "openId------->";
-		String uid = "uid---------->";
-		mWebView.loadUrl("javascript:showInfoFromJava('" + msg1 + "','"
-				+ openId + "','" + uid + "')");
-		// mWebView.loadUrl("javascript:showInfoFromJava2('" + msg1 + "','" +
-		// msg2 + "')");
-
-		String call = "javascript:alertMessage(\"" + "content" + "\")";
-		mWebView.loadUrl(call);
 	}
 
 	/**
@@ -1631,6 +1636,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			LogUtil.d(TAG, "bundle::::  " + bundle.toString());
 			JSONObject jsonRef = new JSONObject();
 			try {
+				
 				jsonRef.put("openid", bundle.getString("openid"));
 				jsonRef.put("province", bundle.getString("province"));
 				jsonRef.put("unionid", bundle.getString("unionid"));

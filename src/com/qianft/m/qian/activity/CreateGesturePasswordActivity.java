@@ -24,7 +24,7 @@ import android.widget.Toast;
 
 
 
-public class CreateGesturePasswordActivity extends Activity implements
+public class CreateGesturePasswordActivity extends BaseActivity implements
 		OnClickListener {
 	private static final int ID_EMPTY_MESSAGE = -1;
 	private static final String KEY_UI_STAGE = "uiStage";
@@ -74,13 +74,11 @@ public class CreateGesturePasswordActivity extends Activity implements
 	 * The states of the right button.
 	 */
 	enum RightButtonMode {
-		
 		Continue(R.string.lockpattern_continue_button_text, true), 
 		ContinueDisabled(R.string.lockpattern_continue_button_text, false), 
 		Confirm(R.string.lockpattern_confirm_button_text, true), 
 		ConfirmDisabled(R.string.lockpattern_confirm_button_text, false), 
 		Ok(android.R.string.ok, true);
-
 		/**
 		 * @param text
 		 *            The displayed text for this mode.

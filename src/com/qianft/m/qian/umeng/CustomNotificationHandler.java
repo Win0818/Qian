@@ -10,8 +10,7 @@ import com.umeng.common.message.Log;
 import com.umeng.message.UmengNotificationClickHandler;
 import com.umeng.message.entity.UMessage;
 
-//使用自定义的NotificationHandler，来结合友盟统计处理消息通知
-//参考http://bbs.umeng.com/thread-11112-1-1.html
+
 public class CustomNotificationHandler extends UmengNotificationClickHandler {
 	
 	private static final String TAG = CustomNotificationHandler.class.getName();
