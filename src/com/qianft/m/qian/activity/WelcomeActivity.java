@@ -40,8 +40,9 @@ public class WelcomeActivity extends BaseActivity{
 	private String isLogin ;
 	private WebView mWebView;
 	//private String mAddress = "file:///android_asset/html/index.html";
-	private String mAddress = "http://192.168.0.88:8011/";
-	
+	//private String mAddress = "http://192.168.0.88:8011/";
+	//private String mAddress = "http://192.168.0.215/Home/Index";
+	private String mAddress = Constant.Address;
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -58,9 +59,7 @@ public class WelcomeActivity extends BaseActivity{
 				finish();*/
 				break;
 			case 2:
-				
 				break;
-
 			default:
 				break;
 			}
@@ -69,7 +68,6 @@ public class WelcomeActivity extends BaseActivity{
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
 				WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(R.layout.activity_welcome);
@@ -93,10 +91,6 @@ public class WelcomeActivity extends BaseActivity{
 		rootLayout.startAnimation(aa);
 	}
 	
-	public void button(View view) {
-		testEvaluateJavascript_1(mWebView);
-	}
-	
 	@SuppressLint("SetJavaScriptEnabled")
 	private void webViewSetting() {
 		WebSettings webSettings = mWebView.getSettings();
@@ -114,7 +108,6 @@ public class WelcomeActivity extends BaseActivity{
 		});
 	}
 	private class HtmlObject{
-		
 		@JavascriptInterface
 		private void init() {
 			
@@ -129,7 +122,6 @@ public class WelcomeActivity extends BaseActivity{
 			@Override
 			public void run() {
 				//第一次打开app打开引导界面
-				
 				if (isFirst) {
 					startActivity(new Intent(WelcomeActivity.this, 
 							NavigationActivity.class));
@@ -140,9 +132,7 @@ public class WelcomeActivity extends BaseActivity{
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					
 					mHandler.sendEmptyMessage(1);
-					
 				}
 			}
 		}).start();
@@ -151,12 +141,13 @@ public class WelcomeActivity extends BaseActivity{
 	@Override
 	protected void onResume() {
 		super.onResume();
-		
+		//友盟统计
 		MobclickAgent.onResume(this);
 	}
 	@Override
 	protected void onPause() {
 		super.onPause();
+		//友盟统计
 		MobclickAgent.onPause(this);
 	}
 	@Override

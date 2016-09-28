@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.qianft.m.qian.BaseApplication;
 import com.qianft.m.qian.R;
+import com.qianft.m.qian.common.Constant;
+import com.qianft.m.qian.common.Global;
 import com.qianft.m.qian.view.LockPatternUtils;
 import com.qianft.m.qian.view.LockPatternView;
 import com.qianft.m.qian.view.LockPatternView.Cell;
@@ -17,6 +19,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
@@ -30,7 +33,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-public class UnlockGesturePasswordActivity extends BaseActivity implements OnClickListener{
+public class UnlockGesturePasswordActivity extends Activity implements OnClickListener{
 	
 	private String TAG = this.getClass().getSimpleName();
 	private LockPatternView mLockPatternView;
@@ -42,15 +45,15 @@ public class UnlockGesturePasswordActivity extends BaseActivity implements OnCli
 	private TextView mForgetPassword;
 	private WebView mWebView;
 	private Toast mToast;
-	private String mAddress = "http://192.168.0.88:8011/";
+	private String mAddress = Constant.Address;
+	//private String mAddress = "http://192.168.0.88:8011/";
 	private void showToast(CharSequence message) {
 		if (null == mToast) {
 			mToast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
-			mToast.setGravity(Gravity.CENTER_HORIZONTAL, 0, 0);
+			//mToast.setGravity(Gravity.CENTER_HORIZONTAL, 0, 500);
 		} else {
 			mToast.setText(message);
 		}
-
 		mToast.show();
 	}
 
@@ -58,7 +61,6 @@ public class UnlockGesturePasswordActivity extends BaseActivity implements OnCli
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.gesturepassword_unlock);
-
 		mWebView = (WebView) findViewById(R.id.webview_unlock);
 		webViewSetting();
 		mLockPatternView = (LockPatternView) this
@@ -119,13 +121,17 @@ public class UnlockGesturePasswordActivity extends BaseActivity implements OnCli
 	};
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case R.id.gesturepwd_unlock_forget:
-			 Toast.makeText(UnlockGesturePasswordActivity.this, "forget password", Toast.LENGTH_LONG).show();
+		case R.id.gesturepwd_unlock_forget: //忘记密码
+			// Toast.makeText(UnlockGesturePasswordActivity.this, "forget password", Toast.LENGTH_LONG).show();
 			 Intent intent = new Intent(UnlockGesturePasswordActivity.this, MainActivity.class);
 			 intent.setAction("com.qianft.m.qian.login");
-			 intent.putExtra("login_url", "");
+			 intent.putExtra("login_url", "http://m.qianft.com/UserLogin");
+			 //intent.putExtra("login_url", "http://192.168.0.88:8011/Account");
 			 mWebView.loadUrl("javascript:" + "appLoginOut()");
-			 startActivity(intent);
+			 //startActivity(intent);//跳转
+			 BaseApplication.getInstance().
+			 	getLockPatternUtils().clearLock();
+			 finish(); 
 			break;
 		default:
 			break;
@@ -151,7 +157,8 @@ public class UnlockGesturePasswordActivity extends BaseActivity implements OnCli
 				Intent intent = new Intent(UnlockGesturePasswordActivity.this,
 						MainActivity.class);
 				// 打开新的Activity
-				startActivity(intent);
+				//startActivity(intent);
+				Global.Screen_Off_Flag = true;
 				showToast("解锁成功");
 				finish();
 			} else {
@@ -230,5 +237,29 @@ public class UnlockGesturePasswordActivity extends BaseActivity implements OnCli
 				}
 			});
 	    }
-
+	 
+	 @Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		 
+		 if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_BACK)) {
+			 //back键等于Home键的效果
+			 Intent i= new Intent(Intent.ACTION_MAIN); 
+			    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK); 
+			    i.addCategory(Intent.CATEGORY_HOME); 
+			    startActivity(i); 
+			 return true;
+		 }
+		return super.onKeyDown(keyCode, event);
+	}
+	 
+	/* @Override
+	public void onBackPressed() {
+		// TODO Auto-generated method stub
+		//super.onBackPressed();
+		 
+		 Intent i= new Intent(Intent.ACTION_MAIN); 
+		    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK); 
+		    i.addCategory(Intent.CATEGORY_HOME); 
+		    startActivity(i); 
+	}*/
 }

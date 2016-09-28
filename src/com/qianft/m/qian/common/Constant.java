@@ -66,4 +66,5 @@ public class Constant {
 	public static final String mLatestVersionDownload = SERVER + "app/GetAppAPK";
 	
 	public static final String ERROR_MSG_POST_URL = SERVER + "App/SubmitAppLog";
+	//http://m.qianft.com/app/GetAppAPK
 }

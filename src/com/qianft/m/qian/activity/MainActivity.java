@@ -7,21 +7,25 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -51,7 +55,6 @@ import android.webkit.WebViewClient;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -94,7 +97,6 @@ import com.umeng.socialize.UMShareListener;
 import com.umeng.socialize.bean.SHARE_MEDIA;
 import com.umeng.socialize.media.UMImage;
 
-
 /**
  * 
  * @author 
@@ -106,9 +108,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private WebView mWebView;
 	private ImageButton mRefreshBtn;
 	private LinearLayout mNoNetworkLinearLayout;
-	//private String mAddress = Constant.Address;
+	private String mAddress = Constant.Address;
 	//private String mAddress = "file:///android_asset/html/index.html";
-	private String mAddress = "http://192.168.0.88:8011/Home/Index";
+	//private String mAddress = "http://192.168.0.88:8011/Home/Index";
 	private boolean DEBUG = true;
 	private String mShareUrl;
 	private String mTitle;
@@ -136,6 +138,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private String mAuthCallback = null;
 	private String mAuthCancel = null ;
 	private ValueCallback<Uri> mUploadMessage;
+	public static boolean isActive = true; //activity是否在后台
+	public static boolean Screen_Off_Flag = true;
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -192,6 +196,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					Manifest.permission.WRITE_APN_SETTINGS};
             ActivityCompat.requestPermissions(this,mPermissionList,100);
         }
+		registerScreenBroadcast();
 		mPushAgent = PushAgent.getInstance(this);
 		initView();
 		initData();
@@ -223,10 +228,17 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		//popMenu.setShareBottomClickListener(this);
 	}
 	
+	/*public void registerScreenBroadcast() {
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		registerReceiver(mScreenBroadcast, filter);
+	}*/
+	
 	public void umengShare(View view) {
 		
-		testEvaluateJavascript(mWebView);
-		
+		//testEvaluateJavascript(mWebView);
+		startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
 		/*final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
                 {
                     SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
@@ -240,8 +252,8 @@ public class MainActivity extends BaseActivity implements OnClickListener,
                 .setListenerList(umShareListener)
                 .open();*/
 		
-		Intent i = new Intent(MainActivity.this, TestActivity.class);
-		startActivity(i);
+		//Intent i = new Intent(MainActivity.this, TestActivity.class);
+		//startActivity(i);
 		
 	}
 	
@@ -249,19 +261,19 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	        @Override
 	        public void onResult(SHARE_MEDIA platform) {
 	            Log.d("plat","platform"+platform);
-	            Toast.makeText(MainActivity.this, platform + " 分享成功", Toast.LENGTH_SHORT).show();
+	            Toast.makeText(MainActivity.this,  " 分享成功", Toast.LENGTH_SHORT).show();
 	        }
 
 	        @Override
 	        public void onError(SHARE_MEDIA platform, Throwable t) {
-	            Toast.makeText(MainActivity.this,platform + " 分享失败", Toast.LENGTH_SHORT).show();
+	            Toast.makeText(MainActivity.this," 分享失败", Toast.LENGTH_SHORT).show();
 	            if(t!=null){
 	                Log.d("throw","throw:"+t.getMessage());
 	            }
 	        }
 	        @Override
 	        public void onCancel(SHARE_MEDIA platform) {
-	            Toast.makeText(MainActivity.this,platform + " 分享取消", Toast.LENGTH_SHORT).show();
+	            Toast.makeText(MainActivity.this," 分享取消", Toast.LENGTH_SHORT).show();
 	        }
 	    };
 	    
@@ -307,9 +319,23 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			mWebView.loadUrl(Push_Url);
 			pushFlag = false;
 		}
+		if (action != null && action.equals("com.qianft.m.qian.login")) {
+			String login_url = getIntent().getStringExtra("login_url");
+			mWebView.loadUrl(login_url); 
+		}
+		
+		if(!isActive && BaseApplication.getInstance().
+				getLockPatternUtils().savedPatternExists()){  
+            //从后台唤醒  
+            isActive = true; 
+            //Screen_Off_Flag = true;
+            LogUtil.d(TAG, "onResume:  start UnlockGesturePasswordActivity");
+            Intent intent = new Intent(this, UnlockGesturePasswordActivity.class);  
+            startActivity(intent);    
+        }   
         //友盟统计
 		MobclickAgent.onResume(this);
-		LogUtil.d(TAG, "onResume:  " + Util.WECHAT_CODE);
+		LogUtil.d(TAG, "onResume:  is executed");
 	}
 	
 	public IUmengRegisterCallback mRegisterCallback = new IUmengRegisterCallback() {
@@ -388,7 +414,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			webSettings.setLoadWithOverviewMode(true);
 			//webSettings.setAllowFileAccess(false);
 			webSettings.setUseWideViewPort(false);
-			webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+			//webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 			webSettings.setBlockNetworkImage(true);
 			webSettings.setSavePassword(false);
 			/*
@@ -669,9 +695,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					e1.printStackTrace();
 				}
 				switch (functionName) {
-						/*case "share_To_Wechat_android":
+						case "share_To_Wechat_android":
 							share_To_Wechat_android(json);
-							break;*/
+							break;
 						case "loginWechat_android":
 							loginWechat_android(json);
 							break;
@@ -748,7 +774,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			
 			public void  share_To_Wechat_android(final String json) {
-				
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -1329,7 +1354,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							
 							JSONObject returnRefJson = new JSONObject();
 							returnRefJson.put("userVersionCode", Global.localVersionCode);
-							returnRefJson.put("userVersionName", Global.localVersionName);
+							returnRefJson.put("userVersionName", "v" + Global.localVersionName);
 							returnJson.put("ref", returnRefJson);
 							String result = returnJson.toString();
 							mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
@@ -1340,7 +1365,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					}
 				});
 			}
-			public void startGesturePasswordSetup_android() {
+			public void startGesturePasswordSetup_android(final String json) {
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -1354,7 +1379,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			
 			@JavascriptInterface
-			public void startGesturePasswordSetup_android(final String json) {
+			public void startGesturePasswordSetup_android() {
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -1558,15 +1583,58 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	protected void onPause() {
 		super.onPause();
 		//友盟统计
+		Log.d("Wing", "onPause is executed! ");
 		MobclickAgent.onPause(this);
 
 	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		Log.d("wing", "onStop execute!");  
+		
+		if(!isAppOnForeground()){  
+            Log.d("wing", "onStop back");  
+            isActive = false;  
+        }  
+	}
+	
+	  /** 
+     * 是否在后台 
+     * @return 
+     */  
+    public boolean isAppOnForeground(){  
+        ActivityManager am = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);  
+        String curPackageName = getApplicationContext().getPackageName();  
+        List<RunningAppProcessInfo> app = am.getRunningAppProcesses();  
+        if(app==null){  
+            return false;  
+        }  
+        for(RunningAppProcessInfo a:app){  
+            if(a.processName.equals(curPackageName)&&  
+                    a.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
+            	
+            	Log.d("Wing", "isAppOnForeground------>>>>>>>>>>");
+                return true;  
+            }  
+        }  
+        return false;  
+        /*ComponentName cn = am.getRunningTasks(1).get(0).topActivity; 
+        if(!TextUtils.isEmpty(curPackageName)&&curPackageName.equals(getPackageName())){ 
+            return true; 
+        } 
+        return false;*/  
+    } 
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		removeAllCookie();
 		EventBus.getDefault().unregister(this);
+		
+		/*if (mScreenBroadcast != null) {
+			unregisterReceiver(mScreenBroadcast);
+		}*/
 	}
 	
 	/**
@@ -1625,7 +1693,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		if ((Global.RESP.errCode == BaseResp.ErrCode.ERR_OK) && 
 				(Global.RESP.getType() == ConstantsAPI.COMMAND_SENDAUTH)) {
 			JSONObject returnJson = new JSONObject();
-			
 			try {
 				if (Global.RESP.errCode == BaseResp.ErrCode.ERR_COMM);
 				returnJson.put("errCode", "0000");
@@ -1635,8 +1702,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			LogUtil.d(TAG, "bundle::::  " + bundle.toString());
 			JSONObject jsonRef = new JSONObject();
+			
+			Log.d("Wing", "");
 			try {
-				
 				jsonRef.put("openid", bundle.getString("openid"));
 				jsonRef.put("province", bundle.getString("province"));
 				jsonRef.put("unionid", bundle.getString("unionid"));
@@ -1646,13 +1714,12 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				jsonRef.put("country", bundle.getString("country"));
 				jsonRef.put("headimgurl", bundle.getString("headimgurl"));
 				returnJson.put("ref", jsonRef);
-				
+				Log.d("Wing", "returnJson.toString():   "  + returnJson.toString());
 				mWebView.loadUrl("javascript: " + mAuthCallback + "(" + returnJson.toString() + ")");
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
 		}
-		
 	}
 	/**
 	 * 检查更新版本
@@ -1782,32 +1849,25 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		});
     }
     
-   /* private boolean isMapPage(){  
-        js.set(JS_KEY, "-1");  
-      
-        mWebView.loadUrl("javascript:"  
-             +"if(window.jsinterface){"  
-             +"    if(window.gnav){" // Your conditions  
-             +"        window.jsinterface.set('"+JS_KEY+"','1');"  
-             +"    }else{"  
-             +"        window.jsinterface.set('"+JS_KEY+"','0');"  
-             +"    }"  
-             +"}"  
-             );  
-      
-    // Sleep moment to let JS finish. Otherwise js.get() run first  
-    try{  
-        Thread.sleep(200);  
-    }catch(InterruptedException ex){  
-         // Ignore  
-    }  
-      
-    	String v = js.get(JS_KEY);  
-    	System.out.println("isMapPage: getValue: value="+v);  
-	    if("1".equals(v)){  
-	        return true;  
-	    }  
-    	return false;  
-    } */ 
-
+    /*private BroadcastReceiver mScreenBroadcast = new BroadcastReceiver() {
+    	public void onReceive(Context context, Intent intent) {
+    		 String action = intent.getAction();  
+             if(Intent.ACTION_SCREEN_ON.equals(action)){  
+            	 //Screen_Off_Flag = true;
+            	 Log.d("Wing", "ACTION_SCREEN_ON");
+                // mScreenStateListener.onScreenOn();  
+             }else if(Intent.ACTION_SCREEN_OFF.equals(action)){ 
+            	 //if(!isAppOnForeground()){  
+                     Log.d("wing", "ACTION_SCREEN_OFF  isAppOnForeground");  
+                     if (Global.Screen_Off_Flag) {
+                    	 Log.d("wing", "ACTION_SCREEN_OFF  isAppOnForeground-- onResume:-----2");  
+                    	 isActive = false;  
+                    	 Global.Screen_Off_Flag = false ;
+                     }
+                     
+                 //}
+            	 Log.d("Wing", "ACTION_SCREEN_OFF");
+             }  
+    	};
+    };*/
 }

@@ -445,7 +445,7 @@ public class CreateGesturePasswordActivity extends BaseActivity implements
 	private void saveChosenPatternAndFinish() {
 		BaseApplication.getInstance().getLockPatternUtils().saveLockPattern(mChosenPattern);
 		showToast("密码设置成功");
-		startActivity(new Intent(this,UnlockGesturePasswordActivity.class));
+		//startActivity(new Intent(this,UnlockGesturePasswordActivity.class));
 		finish();
 	}
 }
