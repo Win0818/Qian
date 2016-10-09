@@ -50,6 +50,7 @@ import android.webkit.JsResult;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
+import android.webkit.WebSettings.RenderPriority;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.CheckBox;
@@ -136,7 +137,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private PushAgent mPushAgent;
 	private boolean pushFlag= true;
 	private String mAuthCallback = null;
-	private String mAuthCancel = null ;
+	private String mAuthCancel = null;
 	private ValueCallback<Uri> mUploadMessage;
 	public static boolean isActive = true; //activity是否在后台
 	public static boolean Screen_Off_Flag = true;
@@ -257,7 +258,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		
 	}
 	
-	 private UMShareListener umShareListener = new UMShareListener() {
+	private UMShareListener umShareListener = new UMShareListener() {
 	        @Override
 	        public void onResult(SHARE_MEDIA platform) {
 	            Log.d("plat","platform"+platform);
@@ -275,7 +276,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	        public void onCancel(SHARE_MEDIA platform) {
 	            Toast.makeText(MainActivity.this," 分享取消", Toast.LENGTH_SHORT).show();
 	        }
-	    };
+	 };
 	    
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -409,13 +410,14 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private void setWebView() {
 		try {
 			WebSettings webSettings = mWebView.getSettings();
-			webSettings.setJavaScriptEnabled(true);
-			webSettings.setDefaultTextEncodingName("utf-8");
-			webSettings.setLoadWithOverviewMode(true);
+			webSettings.setJavaScriptEnabled(true); //开启JavaScript
+			webSettings.setDefaultTextEncodingName("utf-8"); //设置字符编码
+			webSettings.setLoadWithOverviewMode(true);   //调整到适合Webview大小
 			//webSettings.setAllowFileAccess(false);
-			webSettings.setUseWideViewPort(false);
+			webSettings.setUseWideViewPort(true);
 			//webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 			webSettings.setBlockNetworkImage(true);
+			webSettings.setRenderPriority(RenderPriority.HIGH);
 			webSettings.setSavePassword(false);
 			/*
 			 * if (Build.VERSION.SDK_INT <= 18) {
@@ -1370,6 +1372,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					@Override
 					public void run() {
 						try {
+							
 							startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
 						} catch (Exception e) {
 							// TODO: handle exception
@@ -1613,7 +1616,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
         for(RunningAppProcessInfo a:app){  
             if(a.processName.equals(curPackageName)&&  
                     a.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
-            	
             	Log.d("Wing", "isAppOnForeground------>>>>>>>>>>");
                 return true;  
             }  
@@ -1631,7 +1633,9 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		super.onDestroy();
 		removeAllCookie();
 		EventBus.getDefault().unregister(this);
-		
+		//程序执行Destroy方法强制不弹出解锁界面
+		Log.d("Wing", "wwwwww");
+		isActive = true; 
 		/*if (mScreenBroadcast != null) {
 			unregisterReceiver(mScreenBroadcast);
 		}*/
@@ -1641,12 +1645,12 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	 * EventBus2.0 微信授权
 	 * @param message
 	 */
-
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void helloEventBus(String message) {
 		Log.d("Wing", "message:  " + message);
 		switch (message) {
-			case "hello":
+			case "refresh_url":
+				mWebView.loadUrl(Constant.Address);
 				break;
 			case "auth_cancel":
 				JSONObject returnCancelJson = new JSONObject();
@@ -1702,7 +1706,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			LogUtil.d(TAG, "bundle::::  " + bundle.toString());
 			JSONObject jsonRef = new JSONObject();
-			
 			Log.d("Wing", "");
 			try {
 				jsonRef.put("openid", bundle.getString("openid"));

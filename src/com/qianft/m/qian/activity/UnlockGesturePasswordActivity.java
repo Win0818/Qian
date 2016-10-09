@@ -2,6 +2,8 @@ package com.qianft.m.qian.activity;
 
 import java.util.List;
 
+import org.greenrobot.eventbus.EventBus;
+
 import com.qianft.m.qian.BaseApplication;
 import com.qianft.m.qian.R;
 import com.qianft.m.qian.common.Constant;
@@ -110,8 +112,10 @@ public class UnlockGesturePasswordActivity extends Activity implements OnClickLi
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
+		
 		if (mCountdownTimer != null)
 			mCountdownTimer.cancel();
+		
 	}
 	
 	private Runnable mClearPatternRunnable = new Runnable() {
@@ -126,9 +130,11 @@ public class UnlockGesturePasswordActivity extends Activity implements OnClickLi
 			 Intent intent = new Intent(UnlockGesturePasswordActivity.this, MainActivity.class);
 			 intent.setAction("com.qianft.m.qian.login");
 			 intent.putExtra("login_url", "http://m.qianft.com/UserLogin");
-			 //intent.putExtra("login_url", "http://192.168.0.88:8011/Account");
+			 //intent.putExtra("login_url", "http://192.168.0.88:8011/UserLogin");
 			 mWebView.loadUrl("javascript:" + "appLoginOut()");
 			 //startActivity(intent);//跳转
+			//退出登录刷新
+				EventBus.getDefault().post("refresh_url");
 			 BaseApplication.getInstance().
 			 	getLockPatternUtils().clearLock();
 			 finish(); 

@@ -22,9 +22,7 @@ public class TestActivity extends BaseActivity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_test);
 		mWebView = (WebView) findViewById(R.id.play_video);
-		
 		setWebView();
-		
 	}
 	
 	@SuppressLint("SetJavaScriptEnabled")

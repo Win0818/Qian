@@ -60,10 +60,10 @@
         
     </LinearLayout>
     
-   <Button
+   <!-- <Button
        android:layout_width="wrap_content"
 	   android:layout_height="wrap_content"
 	   android:layout_alignParentLeft="true"
 	   android:onClick="umengShare"
-	   android:text="social share" />
+	   android:text="social share" /> -->
 </RelativeLayout>

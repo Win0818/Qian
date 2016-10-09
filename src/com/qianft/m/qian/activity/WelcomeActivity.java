@@ -89,6 +89,9 @@ public class WelcomeActivity extends BaseActivity{
 		AlphaAnimation aa = new AlphaAnimation(0.3f, 1.0f);
 		aa.setDuration(1500);
 		rootLayout.startAnimation(aa);
+		
+		//刚打开的时候不弹出解锁界面
+		MainActivity.isActive = true;
 	}
 	
 	@SuppressLint("SetJavaScriptEnabled")
@@ -132,7 +135,10 @@ public class WelcomeActivity extends BaseActivity{
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					mHandler.sendEmptyMessage(1);
+					//mHandler.sendEmptyMessage(1);
+					startActivity(new Intent(WelcomeActivity.this, 
+							MainActivity.class));
+					finish();
 				}
 			}
 		}).start();
