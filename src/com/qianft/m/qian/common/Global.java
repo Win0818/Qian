@@ -10,6 +10,7 @@ public class Global {
 	public static String localVersionName = null;
 	public static String downloadDir = "/app/download";
 	
-	public static BaseResp RESP ;
+	public static BaseResp RESP = null;
+	public static boolean Screen_Off_Flag = true;
 	
 }

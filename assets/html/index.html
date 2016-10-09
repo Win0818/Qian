@@ -23,6 +23,8 @@
 		var description = '通投息增， 只挣朝夕';
 		var imageUrl = 'http://wx.qlogo.cn/mmopen/8S0vfFbrRlKHNXfficcaOXo5DIfbCfictHssTA6scqtbUicT5uJg2gzEJ7k7rNh7ZDyJVLmT7hQicibvuo8UYt8fYbdcdiawfGTNqV/';
 		window.jsObj.share_To_Wechat_android(str, title, description, imageUrl);
+		//var json = "{}";
+		//window.jsObj.Js_Invoke_Android_Main_Interface("share_To_Wechat_android", json);
         //alert(str);  
     }  
       
@@ -71,10 +73,25 @@
 		var url = "file:///android_asset/html/index_2.html";
 		window.jsObj.loginWechat_android();
 	}
+
+	var json_auth = "{'callback':'result', 'cancel':'cancel'}";
 	function wechat_Auth_Login_js() {
-		var url = "file:///android_asset/html/index_2.html";
-		var userid = "111222";
-		window.jsObj.wechat_Auth_Login_android(userid);
+		//var url = "file:///android_asset/html/index_2.html";
+		//var userid = "111222";
+		//window.jsObj.wechat_Auth_Login_android(userid);
+		//alert("hello world");
+		window.jsObj.Js_Invoke_Android_Main_Interface("wechat_Auth_Login_android", json_auth); 
+
+	}
+
+	function result(json) {
+		var obj = eval(json);
+		alert("fffffff  " + json.errCode  + " errMsg: " + json.errMsg + " ref : " + json.ref.userVersionCode);
+	}
+
+	function cancel(json) {
+		var obj = eval(json);
+		alert("cancelCode  " + json.errCode  + " errMsg: " + json.errMsg );
 	}
 
 	var text = "{'java':'hello java','C++':'hello C++','PHP':'hello PHP','callback':'failure'}";
@@ -95,8 +112,42 @@
 		alert("fffffff" + json.success  + "  failure: " + json.failure);
 		eval("alert('fffffffeeeee')");
 	}
-	
-	
+	var json_info = "{'callback':'result', 'cancel':'cancel'}";
+	function callAndroid_js_appinfo() {
+
+		 window.jsObj.Js_Invoke_Android_Main_Interface('getUserAPPInfo_android', json_info);
+		//eval("var obj = " + window.jsObj.HtmlcallJava2(text, "failure"));
+		//alert('typeof:'+typeof(obj)); 
+		//alert('success:'+obj); 
+		//alert('obj:'+obj);
+		//window.jsObj.HtmlcallJava2(text, "failure");
+	}
+
+	//var result = document.getElementById("result"); 
+	//var input = document.getElementById("file_input"); 
+	//input.addEventListener('change',readFile,false);
+	function startGesturePasswordSetup_js_()  {
+		alert("hello gesture");
+		window.jsObj.startGesturePasswordSetup_android();
+
+	}
+	function isSettingGesturePSW_js() {
+		var json  = "{'callback':'result_s'}";
+		 window.jsObj.isSettingGesturePSW_android(json);
+	}
+	function result_s(json) {
+		var obj = eval(json);
+		alert("result: " + json.is_setting_gesture_password);
+	}
+	function ChangeGesturePSW_js() {
+		 window.jsObj.changeGesturePassword_android();
+	}
+
+	function getSumValue() {
+
+		return "true";
+	}
+	//private String mAddress = "http://192.168.0.88:8011/";
 </script>  
 </head>   
   
@@ -105,10 +156,17 @@
 hello
   
 <br>  
-<input type="button" value="分享" onclick="showHtmlcallJava()" />  
-<br>  
+<input type="button" value="分享" onclick="showHtmlcallJava()" /> 
 <br>  
 <input type="button" value="授权登录" onclick="wechat_Auth_Login_js()" />   
+<br> 
+<input type="file" accept="image/*" />  
+<img src="/storage/emulated/0/qianfutong_2.png" width="50" height="50" />
+<p> 
+   <label>请选择一个图像文件：</label> 
+   <input type="file" id="file_input" value="打开文件"/> 
+</p>  
+<div id="result"></div> 
 <br> 
 <input type="button" value="微信登录" onclick="showHtmlcallJava2()" />    
 <br>   
@@ -121,16 +179,20 @@ hello
 <input type="button" value="AndroidcallHtml2" onclick="window.jsObj.JavacallHtml2()" />  
 
 <br>
-<div id="output" >userinfo: </div><br/><br/> 
+<div id="output" >userinfo: </div><br/>
  <input type="submit" value="request: " onclick="window.jsObj.clickOnAndroid()"/>
- 
 <br>
-<input type="button" value="打开摄像头" onclick="takePhoto()" />  
-<br>  
+<input type="button" value="打开摄像头" onclick="takePhoto()" />   
 <br> 
 <input type="button" value="下载图片" onclick="starVideoPlayActivity_js()" />  
 
 <input type="button" value="CallAndroid" onclick="callAndroid_js()" />
+<input type="button" value="CallAndroidAppInfo" onclick="callAndroid_js_appinfo()" />
+<br>
+<input type="button" value="设置手势解锁" onclick="startGesturePasswordSetup_js_()" />
+<input type="button" value="是否已经设置手势解锁" onclick="isSettingGesturePSW_js()" />
+<br>
+<input type="button" value="更改手势解锁" onclick="ChangeGesturePSW_js()" />
 </body>  
 </html>  
 

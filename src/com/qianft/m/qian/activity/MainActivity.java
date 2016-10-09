@@ -7,28 +7,35 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -40,14 +47,15 @@ import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
+import android.webkit.WebSettings.RenderPriority;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -60,6 +68,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.bumptech.glide.Glide;
+import com.qianft.m.qian.BaseApplication;
 import com.qianft.m.qian.R;
 import com.qianft.m.qian.common.Constant;
 import com.qianft.m.qian.common.Global;
@@ -72,6 +81,8 @@ import com.qianft.m.qian.utils.SharePopMenu.shareBottomClickListener;
 import com.qianft.m.qian.utils.StorageUtils;
 import com.qianft.m.qian.utils.Util;
 import com.qianft.m.qian.view.GlobalProgressDialog;
+import com.tencent.mm.sdk.constants.ConstantsAPI;
+import com.tencent.mm.sdk.modelbase.BaseResp;
 import com.tencent.mm.sdk.modelmsg.SendAuth;
 import com.tencent.mm.sdk.modelmsg.SendMessageToWX;
 import com.tencent.mm.sdk.modelmsg.WXMediaMessage;
@@ -81,13 +92,15 @@ import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.umeng.analytics.MobclickAgent;
 import com.umeng.message.IUmengRegisterCallback;
 import com.umeng.message.PushAgent;
-
+import com.umeng.socialize.ShareAction;
+import com.umeng.socialize.UMShareAPI;
+import com.umeng.socialize.UMShareListener;
+import com.umeng.socialize.bean.SHARE_MEDIA;
+import com.umeng.socialize.media.UMImage;
 
 /**
  * 
- * @author Administrator 只要在网站的目录下配置一个扩展名为： .appcache 的 Manifest 文件，注明哪些文件需缓存，
- *         哪些文件必须经过网络去加载，然后在 <html> 标签中加入 <html manifest="demo.appcache">
- *         即可完成缓存的实现。
+ * @author 
  */
 public class MainActivity extends BaseActivity implements OnClickListener,
 		shareBottomClickListener {
@@ -96,15 +109,14 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private WebView mWebView;
 	private ImageButton mRefreshBtn;
 	private LinearLayout mNoNetworkLinearLayout;
-	private boolean DEBUG = true;
 	private String mAddress = Constant.Address;
 	//private String mAddress = "file:///android_asset/html/index.html";
-	//private String mAddress = "http://192.168.0.70:8088/Home/Index";
+	//private String mAddress = "http://192.168.0.88:8011/Home/Index";
+	private boolean DEBUG = true;
 	private String mShareUrl;
 	private String mTitle;
 	private Bitmap mIcom;
 	private long exitTime = 0;
-	private String mNowUrl = "";//"http://m.qianft.com/";
 	private IWXAPI wxApi;
 	private GlobalProgressDialog mGlobalProgressDialog;
 	private SharePopMenu popMenu;
@@ -124,6 +136,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private int newVersionCode = 1;
 	private PushAgent mPushAgent;
 	private boolean pushFlag= true;
+	private String mAuthCallback = null;
+	private String mAuthCancel = null;
+	private ValueCallback<Uri> mUploadMessage;
+	public static boolean isActive = true; //activity是否在后台
+	public static boolean Screen_Off_Flag = true;
 	private Handler mHandler = new Handler() {
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -169,15 +186,22 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		
+		//requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
+		if(Build.VERSION.SDK_INT>=23){
+			String[] mPermissionList = new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+					Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.CALL_PHONE,
+					Manifest.permission.READ_LOGS,Manifest.permission.READ_PHONE_STATE, 
+					Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.SET_DEBUG_APP,
+					Manifest.permission.SYSTEM_ALERT_WINDOW,Manifest.permission.GET_ACCOUNTS,
+					Manifest.permission.WRITE_APN_SETTINGS};
+            ActivityCompat.requestPermissions(this,mPermissionList,100);
+        }
+		registerScreenBroadcast();
 		mPushAgent = PushAgent.getInstance(this);
 		initView();
 		initData();
 	}
-	
-
 
 	private void initView() {
 		picture = (ImageView) findViewById(R.id.image_view);
@@ -195,20 +219,84 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		wxApi.registerApp(Constant.APP_ID);
 		mContext = this;
 		// 初始化弹出菜单
-		popMenu = new SharePopMenu(this);
+		//popMenu = new SharePopMenu(this);
 		/*
 		 * popMenu.addItem(new ShareObject(getResources().getString(
 		 * R.string.share_to_wechat_freind), R.drawable.share_to_freind));
 		 * popMenu.addItem(new ShareObject(getResources().getString(
 		 * R.string.share_to_wechat_circle), R.drawable.share_to_circle));
 		 */
-		popMenu.setShareBottomClickListener(this);
+		//popMenu.setShareBottomClickListener(this);
 	}
+	
+	/*public void registerScreenBroadcast() {
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(Intent.ACTION_SCREEN_ON);
+		filter.addAction(Intent.ACTION_SCREEN_OFF);
+		registerReceiver(mScreenBroadcast, filter);
+	}*/
+	
+	public void umengShare(View view) {
+		
+		//testEvaluateJavascript(mWebView);
+		startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
+		/*final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
+                {
+                    SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
+                    SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE
+                };
+        new ShareAction(this).setDisplayList( displaylist )
+                .withText( "呵呵" )
+                .withTitle("title")
+                .withTargetUrl("http://www.baidu.com")
+                //.withMedia()
+                .setListenerList(umShareListener)
+                .open();*/
+		
+		//Intent i = new Intent(MainActivity.this, TestActivity.class);
+		//startActivity(i);
+		
+	}
+	
+	private UMShareListener umShareListener = new UMShareListener() {
+	        @Override
+	        public void onResult(SHARE_MEDIA platform) {
+	            Log.d("plat","platform"+platform);
+	            Toast.makeText(MainActivity.this,  " 分享成功", Toast.LENGTH_SHORT).show();
+	        }
+
+	        @Override
+	        public void onError(SHARE_MEDIA platform, Throwable t) {
+	            Toast.makeText(MainActivity.this," 分享失败", Toast.LENGTH_SHORT).show();
+	            if(t!=null){
+	                Log.d("throw","throw:"+t.getMessage());
+	            }
+	        }
+	        @Override
+	        public void onCancel(SHARE_MEDIA platform) {
+	            Toast.makeText(MainActivity.this," 分享取消", Toast.LENGTH_SHORT).show();
+	        }
+	 };
+	    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        UMShareAPI.get( this ).onActivityResult(requestCode, resultCode, data);
+        Log.d("result","onActivityResult");
+        
+        if (requestCode == 0) {
+			if (null == mUploadMessage){
+				return;
+			}
+			Uri result = data == null || resultCode != RESULT_OK ? null : data.getData();
+			mUploadMessage.onReceiveValue(result);
+			mUploadMessage = null;
+		}
+    }
 
 	private void initData() {
 		EventBus.getDefault().register(this);
 		requestQueue = Volley.newRequestQueue(mContext);
-		
 		PushAgent mPushAgent = PushAgent.getInstance(this);
 		mPushAgent.enable(mRegisterCallback);
 		//mPushAgent.enable();
@@ -232,9 +320,23 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			mWebView.loadUrl(Push_Url);
 			pushFlag = false;
 		}
+		if (action != null && action.equals("com.qianft.m.qian.login")) {
+			String login_url = getIntent().getStringExtra("login_url");
+			mWebView.loadUrl(login_url); 
+		}
+		
+		if(!isActive && BaseApplication.getInstance().
+				getLockPatternUtils().savedPatternExists()){  
+            //从后台唤醒  
+            isActive = true; 
+            //Screen_Off_Flag = true;
+            LogUtil.d(TAG, "onResume:  start UnlockGesturePasswordActivity");
+            Intent intent = new Intent(this, UnlockGesturePasswordActivity.class);  
+            startActivity(intent);    
+        }   
         //友盟统计
 		MobclickAgent.onResume(this);
-		LogUtil.d(TAG, "onResume:  " + Util.WECHAT_CODE);
+		LogUtil.d(TAG, "onResume:  is executed");
 	}
 	
 	public IUmengRegisterCallback mRegisterCallback = new IUmengRegisterCallback() {
@@ -253,16 +355,16 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Override
 	public void onClick(View v) {
 		switch (v.getId()) {
-		case R.id.refresh_btn:
-			if (!Util.isNetWorkConnected(this)) {
-				mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
-			} else {
-				mNoNetworkLinearLayout.setVisibility(View.INVISIBLE);
-				setWebView();
-			}
-			break;
-		default:
-			break;
+			case R.id.refresh_btn:
+				if (!Util.isNetWorkConnected(this)) {
+					mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
+				} else {
+					mNoNetworkLinearLayout.setVisibility(View.INVISIBLE);
+					setWebView();
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -272,14 +374,21 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	@Override
 	public void shareCircle() {
 		Log.d("Wing", "SHARE_TO_FREIND_CIRCLE");
-		if (mShareUrl != null && mTitle != null && mDescription != null
+		/*if (mShareUrl != null && mTitle != null && mDescription != null
 				&& mImageUrl != null) {
 			share(Constant.SHARE_TO_FREIND_CIRCLE, mShareUrl, mTitle,
 					mDescription, mImageUrl);
 			LogUtil.d("Wing", "mShareUrl: " + mShareUrl + "mTitle: " + mTitle
 					+ "mDescription: " + mDescription + "mImageUrl: "
 					+ mImageUrl);
-		}
+		}*/
+		new ShareAction(this)
+		.setPlatform(SHARE_MEDIA.WEIXIN_CIRCLE)
+		.setCallback(umShareListener)
+		.withText("hello umeng video")
+		.withTargetUrl("http://www.baidu.com")
+		//.withMedia(image)
+		.share();
 	}
 	/**
 	 * 分享给微信好友
@@ -301,13 +410,14 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	private void setWebView() {
 		try {
 			WebSettings webSettings = mWebView.getSettings();
-			webSettings.setJavaScriptEnabled(true);
-			webSettings.setDefaultTextEncodingName("utf-8");
-			webSettings.setLoadWithOverviewMode(true);
-			webSettings.setAllowFileAccess(false);
-			webSettings.setUseWideViewPort(false);
-			webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+			webSettings.setJavaScriptEnabled(true); //开启JavaScript
+			webSettings.setDefaultTextEncodingName("utf-8"); //设置字符编码
+			webSettings.setLoadWithOverviewMode(true);   //调整到适合Webview大小
+			//webSettings.setAllowFileAccess(false);
+			webSettings.setUseWideViewPort(true);
+			//webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
 			webSettings.setBlockNetworkImage(true);
+			webSettings.setRenderPriority(RenderPriority.HIGH);
 			webSettings.setSavePassword(false);
 			/*
 			 * if (Build.VERSION.SDK_INT <= 18) {
@@ -316,12 +426,13 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			 * "Saving passwords in WebView will not be supported in future versions"
 			 * }
 			 */
-			mWebView.addJavascriptInterface(getHtmlObject(), "jsObj");
+			Log.i(TAG, "MainActivity ----->>>>>setWebview");
+			mWebView.addJavascriptInterface(/*getHtmlObject()*/new getHtmlObject(), "jsObj");
 			mWebView.loadUrl(mAddress);
 			mWebView.setOnKeyListener(new OnKeyListener() {
 				@Override
 				public boolean onKey(View v, int keyCode, KeyEvent event) {
-					if (keyCode == KeyEvent.KEYCODE_BACK && mNowUrl != null
+					if (keyCode == KeyEvent.KEYCODE_BACK 
 							&& mWebView.getUrl().equals("http://m.qianft.com/")) {
 						return false;
 					} else if (keyCode == KeyEvent.KEYCODE_BACK
@@ -337,9 +448,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				@Override
 				public boolean shouldOverrideUrlLoading(WebView view, String url) {
 					if (DEBUG)
-						Log.e("Wing", "..shouldOverrideUrlLoading.. url=" + url);
-					mNowUrl = url;
-					Log.e("Wing", "..mNowUrl =" + mNowUrl);
+						Log.e("Wing", "MainActivity..shouldOverrideUrlLoading..  url=" + url);
 					view.loadUrl(url);
 					return true;
 				}
@@ -359,7 +468,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					mWebView.getSettings().setBlockNetworkImage(false);
 					super.onPageFinished(view, url);
 				}
-
 				@Override
 				@Deprecated
 				public void onReceivedError(WebView view, int errorCode,
@@ -368,12 +476,18 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					 * super.onReceivedError(view, errorCode, description,
 					 * failingUrl);
 					 */
-					view.stopLoading();
-					view.clearView();
+					if (view != null) {
+						view.stopLoading();
+						view.clearView();
+					}
 					LogUtil.d("Wing", "onReceivedError---errorCode---->>>>>>>"
 							+ errorCode);
-					mHandler.sendEmptyMessage(Constant.NO_NETWORK_HANDLER);
-					mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
+					if (mHandler != null) {
+						mHandler.sendEmptyMessage(Constant.NO_NETWORK_HANDLER);
+					}
+					if (mNoNetworkLinearLayout != null) {
+						mNoNetworkLinearLayout.setVisibility(View.VISIBLE);
+					}
 					super.onReceivedError(view, errorCode, description,
 							failingUrl);
 				}
@@ -403,6 +517,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 				@Override
 				public boolean onJsAlert(WebView view, String url,
 						String message, JsResult result) {
+					Log.d(TAG, "onJsAlert message: " + message);
 					return super.onJsAlert(view, url, message, result);
 				}
 
@@ -411,25 +526,47 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						String message, JsResult result) {
 					return super.onJsConfirm(view, url, message, result);
 				}
+				
+				@SuppressWarnings("unused")
+				public void openFileChooser(ValueCallback<Uri> uploadMsg, String AcceptType, String capture) {
+					this.openFileChooser(uploadMsg);
+				}
+
+				@SuppressWarnings("unused")
+				public void openFileChooser(ValueCallback<Uri> uploadMsg, String AcceptType) {
+					this.openFileChooser(uploadMsg);
+				}
+
+				public void openFileChooser(ValueCallback<Uri> uploadMsg) {
+					mUploadMessage = uploadMsg;
+					pickFile();
+				}
 			});
 
 		} catch (Exception e) {
 			return;
 		}
 	}
+	
+	public void pickFile() {
+		Intent chooserIntent = new Intent(Intent.ACTION_GET_CONTENT);
+		chooserIntent.setType("image/*");
+		startActivityForResult(chooserIntent, 0);
+	}
 
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
+
 		// TODO Auto-generated method stub
 		// if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.canGoBack()) {
 		// mWebView.goBack(); return false; } else
 		/*if(mWebView == null){
 		      Log.d(TAG, "Webview is null on KeyCode: " + String.valueOf(keyCode));
 		    }*/
-		if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_BACK)){
+		if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_BACK)) {
 			if (mWebView != null) {
 				LogUtil.d(TAG, "mWebView.getUrl();  "  + mWebView.getUrl());
-				if (mWebView.getUrl().equals("http://m.qianft.com/")) {
+				if (keyCode == KeyEvent.KEYCODE_BACK && mWebView.getUrl().equals("http://m.qianft.com/")) {
 					exitApp();
 					return false;
 				} else {
@@ -538,12 +675,22 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	 * 
 	 * @return
 	 */
-	private Object getHtmlObject() {
+	 public class getHtmlObject {
+		 protected Context ctx;
+		 protected WebView vw;
+		 
+		 public getHtmlObject() {
+			 
+		 }
+		 public getHtmlObject(Context context, WebView webview) {
+			 this.ctx = context;
+			 this.vw = webview;
+			 
+		 }
 
-		Object insertObj = new Object() {
+		//Object insertObj = new Object() {
 			@JavascriptInterface
 			public void Js_Invoke_Android_Main_Interface(String functionName, String json) {
-				
 				LogUtil.d("Wing", "HtmlcallAndroid---------->>>>>>>>>>>>>>" +functionName + "-------" +  json);
 				JSONObject jsonObject = null;
 				JSONObject returnJson = null;
@@ -581,6 +728,10 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 						case "clearUserInfo_android":
 							clearUserInfo_android(json);
 						   break;
+						case "startGesturePasswordSetup_android":
+							startGesturePasswordSetup_android(json);
+						   break;
+						   
 						default:
 							try {
 								returnJson.put("errorCode", "0002");
@@ -598,18 +749,39 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			
 			@JavascriptInterface
-			public void share_To_Wechat_android(String webpageUrl,
-					String title, String description, String imageUrl) {
-				mTitle = title;
-				mShareUrl = webpageUrl;
-				mDescription = description;
-				mImageUrl = imageUrl;
-				popMenu.showAsDropDown(MainActivity.this
-						.findViewById(R.id.main_root));
+			public void share_To_Wechat_android(final String webpageUrl,
+					final String title, final String description, final String imageUrl) {
+				runOnUiThread(new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						mTitle = title;
+						mShareUrl = webpageUrl;
+						mDescription = description;
+						mImageUrl = imageUrl;
+						/*popMenu.showAsDropDown(MainActivity.this
+								.findViewById(R.id.main_root));*/
+						
+						final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
+				                {
+				                    SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
+				                    SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE
+				                };
+				        new ShareAction(MainActivity.this).setDisplayList( displaylist )
+				                .withText(description)
+				                .withTitle(title)
+				                .withTargetUrl(webpageUrl)
+				                .withMedia(new UMImage(MainActivity.this,
+				                        BitmapFactory.decodeResource(getResources(), R.drawable.app_icon)))
+				                .setListenerList(umShareListener)
+				                .open();
+					}
+				});
+				
 			}
 			
 			public void  share_To_Wechat_android(final String json) {
-				
 				runOnUiThread(new Runnable() {
 					@Override
 					public void run() {
@@ -624,14 +796,29 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							mDescription = jsonObject.getString("desc");
 							mImageUrl = jsonObject.getString("imgUrl");
 							
+							
 							if (jsonObject.has("callback")) {
 								mCallback = jsonObject.getString("callback");
 							}
 							if (jsonObject.has("cancel")) {
 								mCancel = jsonObject.getString("cancel");
 							}
-							popMenu.showAsDropDown(MainActivity.this
-									.findViewById(R.id.main_root));
+							
+							final SHARE_MEDIA[] displaylist = new SHARE_MEDIA[]
+					                {
+					                    SHARE_MEDIA.WEIXIN, SHARE_MEDIA.WEIXIN_CIRCLE,SHARE_MEDIA.SINA,
+					                    SHARE_MEDIA.QQ, SHARE_MEDIA.QZONE
+					                };
+					        new ShareAction(MainActivity.this).setDisplayList( displaylist )
+					                .withText(mDescription)
+					                .withTitle(mTitle)
+					                .withTargetUrl(mShareUrl)
+					                .withMedia(new UMImage(MainActivity.this,
+					                        BitmapFactory.decodeResource(getResources(), R.drawable.app_icon)))
+					                .setListenerList(umShareListener)
+					                .open();
+							/*popMenu.showAsDropDown(MainActivity.this
+									.findViewById(R.id.main_root));*/
 							
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
@@ -742,7 +929,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					}
 				});
 			}
-
 			@JavascriptInterface
 			public void takePhoto_android(String path, String picFileName) {
 				takePhoto(path, picFileName);
@@ -768,7 +954,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
 							returnJson.put("errMsg", "执行成功");
-							
 
 							JSONObject jsonObject2 = new JSONObject();
 							jsonObject2.put("saveTargetDir", mSaveTargetDir);
@@ -826,39 +1011,39 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					public void run() {
 						LogUtil.d(TAG, "wechat_Auth_Login_android  ------------------json"  + json);
 						String mCallback = null;
-						String mCancel = null ;
+						String mCancel = null;
 						JSONObject jsonObject = null;
 						JSONObject returnJson = null;
 						
 						try {
 							jsonObject = new JSONObject(json);
-							String userid = jsonObject.getString("userId");
-							String postServerUrl = jsonObject.getString("postServerUrl");
-							String auth_Success_Url = jsonObject.getString("auth_Success_Url");
+							//String userid = jsonObject.getString("userId");
+							//String postServerUrl = jsonObject.getString("postServerUrl");
+							//String auth_Success_Url = jsonObject.getString("auth_Success_Url");
 							LogUtil.d(TAG, "jsonObject.has(callback) "  + jsonObject.has("callback"));
 							if (jsonObject.has("callback")) {
-								mCallback = jsonObject.getString("callback");
+								mAuthCallback = jsonObject.getString("callback");
 							}
 							LogUtil.d(TAG, "jsonObject.has(cancel): "   + jsonObject.has("cancel"));
 							if (jsonObject.has("cancel")) {
-								mCancel = jsonObject.getString("cancel");
+								mAuthCancel = jsonObject.getString("cancel");
 							}
-							LogUtil.d("Wing", "userid:   " + userid);
-							Util.SERVER_URL = postServerUrl;
-							Util.Auth_Success_Url = auth_Success_Url;
-							Util.USER_ID = userid;
+							//LogUtil.d("Wing", "userid:   " + userid);
+							//Util.SERVER_URL = postServerUrl;
+							//Util.Auth_Success_Url = auth_Success_Url;
+							//Util.USER_ID = userid;
 							loginWechat();
 							
 							returnJson = new JSONObject();
 							returnJson.put("errCode", "0000");
 							returnJson.put("errMsg", "执行成功");
 
-							JSONObject jsonObject2 = new JSONObject();
-							jsonObject2.put("userId", userid);
-							jsonObject2.put("postServerUrl", postServerUrl);
-							jsonObject2.put("auth_Success_Url", auth_Success_Url);
+							//JSONObject jsonObject2 = new JSONObject();
+							//jsonObject2.put("userId", userid);
+							//jsonObject2.put("postServerUrl", postServerUrl);
+							//jsonObject2.put("auth_Success_Url", auth_Success_Url);
 							
-							returnJson.put("ref", jsonObject2);
+							//returnJson.put("ref", jsonObject2);
 							
 							//if (!TextUtils.isEmpty(mCallback)) {
 								//mWebView.loadUrl("javascript:" + mSuccess + "(" + result +")" );
@@ -983,36 +1168,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 								Toast.LENGTH_SHORT).show();
 					}
 				});
-			}
-
-			// 以json实现webview与js之间的数据交互
-			public String jsontohtml() {
-				JSONObject map;
-				JSONArray array = new JSONArray();
-				try {
-					map = new JSONObject();
-					map.put("name", "aaron");
-					map.put("age", 25);
-					map.put("address", "中国上海");
-					array.put(map);
-
-					map = new JSONObject();
-					map.put("name", "jacky");
-					map.put("age", 22);
-					map.put("address", "中国北京");
-					array.put(map);
-
-					map = new JSONObject();
-
-					map.put("name", "vans");
-					map.put("age", 26);
-					map.put("address", "中国深圳");
-					map.put("phone", "13888888888");
-					array.put(map);
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
-				return array.toString();
 			}
 
 			/**
@@ -1184,33 +1339,125 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}*/
 			
 			@JavascriptInterface
-			public void  getUserAPPInfo_android(String json) {
+			public void  getUserAPPInfo_android(final String json) {
 				
-				JSONObject jsonObject = null;
-				JSONObject returnJson = null;
-				String mCallback = null;
-				try {
-					jsonObject = new JSONObject(json);
-					if (jsonObject.has("callback")) {
-						mCallback = jsonObject.getString("callback");
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						JSONObject jsonObject = null;
+						JSONObject returnJson = null;
+						String mCallback = null;
+						try {
+							LogUtil.d("Wing", "json_info:  " + json);
+							jsonObject = new JSONObject(json);
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
+							String phoneMode = android.os.Build.MODEL;
+							String systemSDK = android.os.Build.VERSION.SDK;
+							
+							returnJson = new JSONObject();
+							returnJson.put("errCode", "0000"); 
+							returnJson.put("errMsg", "执行成功");
+							
+							JSONObject returnRefJson = new JSONObject();
+							returnRefJson.put("userVersionCode", Global.localVersionCode);
+							returnRefJson.put("userVersionName", "v" + Global.localVersionName);
+							returnJson.put("ref", returnRefJson);
+							String result = returnJson.toString();
+							mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
+						} catch (JSONException e) {
+							e.printStackTrace();
+						}
+						
 					}
-					String phoneMode = android.os.Build.MODEL;
-					String systemSDK = android.os.Build.VERSION.SDK;
-					
-					returnJson = new JSONObject();
-					returnJson.put("errCode", "0000");
-					returnJson.put("errMsg", "执行成功");
-					returnJson.put("userVersionCode", Global.localVersionCode);
-					returnJson.put("userVersionName", Global.localVersionName);
-					String result = returnJson.toString();
-					mWebView.loadUrl("javascript:" + mCallback + "(" + result +")" );
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+				});
 			}
-		};
-
-		return insertObj;
+			public void startGesturePasswordSetup_android(final String json) {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							
+							startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
+				});
+			}
+			
+			@JavascriptInterface
+			public void startGesturePasswordSetup_android() {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
+						} catch (Exception e) {
+							// TODO: handle exception
+						}
+					}
+				});
+			}
+			
+			@JavascriptInterface
+			public void isSettingGesturePSW_android(final String json) {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						JSONObject jsonObject = null;
+						JSONObject returnJson = null;
+						String mCallback = null;
+						try {
+							jsonObject = new JSONObject(json);
+							if (jsonObject.has("callback")) {
+								mCallback = jsonObject.getString("callback");
+							}
+							returnJson = new JSONObject();
+							if (BaseApplication.getInstance().getLockPatternUtils().savedPatternExists()) {
+								returnJson.put("is_setting_gesture_password", true);
+							} else {
+								returnJson.put("is_setting_gesture_password", false);
+							}
+							Log.d("Wing", "is_setting_gesture_password:  " + returnJson.toString());
+							mWebView.loadUrl("javascript: " + mCallback + "(" + returnJson.toString() + ")");
+						} catch (Exception e) {
+							e.printStackTrace();   
+						}
+					}
+				});
+			}
+			
+			@JavascriptInterface
+			public void changeGesturePassword_android() {
+				runOnUiThread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							BaseApplication.getInstance().getLockPatternUtils().clearLock();
+							startActivity(new Intent(MainActivity.this, CreateGesturePasswordActivity.class));
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+			
+			private Map<String,String> valueMap = new HashMap<String, String>();  
+			
+			@JavascriptInterface
+			public String set(String key, String value) {  
+			        valueMap.put(key, value);  
+			        return "";  
+		  
+		    }  
+			
+			@JavascriptInterface
+		    public String get(String key){  
+		        return valueMap.get(key);  
+		    }
+		//return insertObj;
 	}
 
 	// 开始网页加载进度条
@@ -1218,7 +1465,7 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 		if (mGlobalProgressDialog == null) {
 			mGlobalProgressDialog = GlobalProgressDialog.createDialog(this);
 		}
-		mGlobalProgressDialog.show();
+		mGlobalProgressDialog.show();  
 	}
 
 	// 停止网页加载进度条
@@ -1229,22 +1476,6 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 			}
 			mGlobalProgressDialog = null;
 		}
-	}
-
-	public void sendInfoToJs(View view) {
-		String msg1 = ((EditText) findViewById(R.id.input_et)).getText()
-				.toString();
-		String msg2 = "I am wuyong";
-		// 调用js中的函数：showInfoFromJava(msg)
-		String openId = "openId------->";
-		String uid = "uid---------->";
-		mWebView.loadUrl("javascript:showInfoFromJava('" + msg1 + "','"
-				+ openId + "','" + uid + "')");
-		// mWebView.loadUrl("javascript:showInfoFromJava2('" + msg1 + "','" +
-		// msg2 + "')");
-
-		String call = "javascript:alertMessage(\"" + "content" + "\")";
-		mWebView.loadUrl(call);
 	}
 
 	/**
@@ -1361,36 +1592,96 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 	protected void onPause() {
 		super.onPause();
 		//友盟统计
+		Log.d("Wing", "onPause is executed! ");
 		MobclickAgent.onPause(this);
 
 	}
+	
+	@Override
+	protected void onStop() {
+		super.onStop();
+		Log.d("wing", "onStop execute!");  
+		
+		if(!isAppOnForeground()){  
+            Log.d("wing", "onStop back");  
+            isActive = false;  
+        }  
+	}
+	
+	  /** 
+     * 是否在后台 
+     * @return 
+     */  
+    public boolean isAppOnForeground(){  
+        ActivityManager am = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);  
+        String curPackageName = getApplicationContext().getPackageName();  
+        List<RunningAppProcessInfo> app = am.getRunningAppProcesses();  
+        if(app==null){  
+            return false;  
+        }  
+        for(RunningAppProcessInfo a:app){  
+            if(a.processName.equals(curPackageName)&&  
+                    a.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND){
+            	Log.d("Wing", "isAppOnForeground------>>>>>>>>>>");
+                return true;  
+            }  
+        }  
+        return false;  
+        /*ComponentName cn = am.getRunningTasks(1).get(0).topActivity; 
+        if(!TextUtils.isEmpty(curPackageName)&&curPackageName.equals(getPackageName())){ 
+            return true; 
+        } 
+        return false;*/  
+    } 
 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		removeAllCookie();
 		EventBus.getDefault().unregister(this);
+		//程序执行Destroy方法强制不弹出解锁界面
+		Log.d("Wing", "wwwwww");
+		isActive = true; 
+		/*if (mScreenBroadcast != null) {
+			unregisterReceiver(mScreenBroadcast);
+		}*/
 	}
 	
 	/**
 	 * EventBus2.0 微信授权
 	 * @param message
 	 */
-
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void helloEventBus(String message) {
 		Log.d("Wing", "message:  " + message);
 		switch (message) {
-			case "hello":
+			case "refresh_url":
+				mWebView.loadUrl(Constant.Address);
 				break;
-			case "login_state":
+			case "auth_cancel":
+				JSONObject returnCancelJson = new JSONObject();
+				try {
+					returnCancelJson.put("errCode", "0000");
+					returnCancelJson.put("errMsg", "登录取消");
+					mWebView.loadUrl("javascript: " + mAuthCancel + "(" + returnCancelJson.toString() + ")");
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 				break;
-			case "":
+			case "auth_fail":
+				JSONObject returnFailJson = new JSONObject();
+				try {
+					returnFailJson.put("errCode", "0004");
+					returnFailJson.put("errMsg", "登录失败");
+					mWebView.loadUrl("javascript: " + mAuthCallback + "(" + returnFailJson.toString() + ")");
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 				break;
 			default:
 				break;
 		}
-		if (message.equals("hello")) {
+		/*if (message.equals("hello")) {
 			mWebView.loadUrl("http://m.qianft.com/WeiXin/Success");
 		} else if (message.equals("login_state")) {
 			String uid = MySharePreData.GetData(MainActivity.this,
@@ -1399,12 +1690,45 @@ public class MainActivity extends BaseActivity implements OnClickListener,
 					.replace("UNIONID", uid));
 		} else if (message.equals("")) {
 			mWebView.loadUrl("");
-		}
+		}*/
 	}
 	
+	/**
+	 * 微信授权
+	 * @param bundle
+	 */
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void weChat(Bundle bundle) {
-		LogUtil.d(TAG, "bundle::::  " + bundle.toString());
+		
+		if ((Global.RESP.errCode == BaseResp.ErrCode.ERR_OK) && 
+				(Global.RESP.getType() == ConstantsAPI.COMMAND_SENDAUTH)) {
+			JSONObject returnJson = new JSONObject();
+			try {
+				if (Global.RESP.errCode == BaseResp.ErrCode.ERR_COMM);
+				returnJson.put("errCode", "0000");
+				returnJson.put("errMsg", "执行成功");
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			LogUtil.d(TAG, "bundle::::  " + bundle.toString());
+			JSONObject jsonRef = new JSONObject();
+			Log.d("Wing", "");
+			try {
+				jsonRef.put("openid", bundle.getString("openid"));
+				jsonRef.put("province", bundle.getString("province"));
+				jsonRef.put("unionid", bundle.getString("unionid"));
+				jsonRef.put("sex", bundle.getString("sex"));
+				jsonRef.put("city", bundle.getString("city"));
+				jsonRef.put("nickname", bundle.getString("nickname"));
+				jsonRef.put("country", bundle.getString("country"));
+				jsonRef.put("headimgurl", bundle.getString("headimgurl"));
+				returnJson.put("ref", jsonRef);
+				Log.d("Wing", "returnJson.toString():   "  + returnJson.toString());
+				mWebView.loadUrl("javascript: " + mAuthCallback + "(" + returnJson.toString() + ")");
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	/**
 	 * 检查更新版本
@@ -1509,6 +1833,11 @@ public class MainActivity extends BaseActivity implements OnClickListener,
         return error;  
     }
     
+    /*
+     * 推送Intent
+     * (non-Javadoc)
+     * @see android.app.Activity#onNewIntent(android.content.Intent)
+     */
     @Override
     protected void onNewIntent(Intent intent) {
     	super.onNewIntent(intent);
@@ -1517,5 +1846,37 @@ public class MainActivity extends BaseActivity implements OnClickListener,
         	LogUtil.d(TAG, "intent:   " + intent);
     	}
     }
-
+    
+    @SuppressLint("NewApi") 
+    private void testEvaluateJavascript(WebView webview) {
+    	webview.evaluateJavascript("getSumValue()", new ValueCallback<String>() {
+			
+			@Override
+			public void onReceiveValue(String value) {
+				Log.i(TAG, "onReceiveValue value=   " + value);
+			}
+		});
+    }
+    
+    /*private BroadcastReceiver mScreenBroadcast = new BroadcastReceiver() {
+    	public void onReceive(Context context, Intent intent) {
+    		 String action = intent.getAction();  
+             if(Intent.ACTION_SCREEN_ON.equals(action)){  
+            	 //Screen_Off_Flag = true;
+            	 Log.d("Wing", "ACTION_SCREEN_ON");
+                // mScreenStateListener.onScreenOn();  
+             }else if(Intent.ACTION_SCREEN_OFF.equals(action)){ 
+            	 //if(!isAppOnForeground()){  
+                     Log.d("wing", "ACTION_SCREEN_OFF  isAppOnForeground");  
+                     if (Global.Screen_Off_Flag) {
+                    	 Log.d("wing", "ACTION_SCREEN_OFF  isAppOnForeground-- onResume:-----2");  
+                    	 isActive = false;  
+                    	 Global.Screen_Off_Flag = false ;
+                     }
+                     
+                 //}
+            	 Log.d("Wing", "ACTION_SCREEN_OFF");
+             }  
+    	};
+    };*/
 }

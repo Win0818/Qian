@@ -27,10 +27,7 @@ import android.os.Build;
 
 /**
  * 
- * @description ssl安全链接工厂 更多移动开发内容请关注： http://blog.csdn.net/xiong_it
  * @charset UTF-8
- * @author xiong_it
- * @date 2015-7-20下午4:43:25
  * @version
  */
 public class TrustAllSSLSocketFactory  extends SSLSocketFactory   {

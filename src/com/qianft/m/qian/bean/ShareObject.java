@@ -21,5 +21,4 @@ public class ShareObject {
 	public void setImageId(int imageId) {
 		this.imageId = imageId;
 	}
-	
 }
