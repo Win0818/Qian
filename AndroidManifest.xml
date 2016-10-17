@@ -51,7 +51,7 @@
 		</meta-data>
 		<meta-data
 		    android:name="UMENG_CHANNEL"
-		    android:value="qianftserver">
+		    android:value="oppo">
 		</meta-data>
         <activity
             android:name=".activity.WelcomeActivity"
